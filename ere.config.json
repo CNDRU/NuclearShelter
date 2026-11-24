@@ -1,0 +1,24 @@
+{
+  "system": {
+    "_replace": false,
+    "collapseBlankLines": false,
+    "disableClear": false,
+    "extendedCharaTables": [],
+    "hideUserInput": false,
+    "resource": false,
+    "saveCompressedData": false,
+    "saveFiles": 10,
+    "scroll": true,
+    "static": "csv"
+  },
+  "window": {
+    "audio": 100,
+    "autoMax": false,
+    "fontFamily": "EraMono SC",
+    "fontSize": 16,
+    "height": 880,
+    "limit": 512,
+    "orientation": 1,
+    "width": 1000
+  }
+}
