@@ -1,4 +1,5 @@
 {
     "cur_map_node":{"id":0},
-    "render_palyer_state":{"id":1}
+    "render_player_state":{"id":1},
+    "is_at_title":{"id":2}
 }
