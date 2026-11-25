@@ -376,7 +376,7 @@ const era = {
   playMusic(names, config) {},
   /**
    * print some text
-   * @param {TextContent} content REQUIRED the text to be printed
+   * @param {MapIterator<[any, any]>} content REQUIRED the text to be printed
    * @param {TextConfig} [config] config of the printed line
    * @returns {number} line number of the printed line
    */
@@ -430,7 +430,7 @@ const era = {
   printLineChart(config) {},
   /**
    * print multiple columns into a row, excluding inputs
-   * @param {[{button: {width: number}, content: string, type: string, accelerator: number}]} columnObjects the array of settings of columns, like print, printButton, printImage and printProgress
+   * @param {[{config: {width: number}, content: string, type: string, disabled: boolean}]} columnObjects the array of settings of columns, like print, printButton, printImage and printProgress
    * @param {ColumnConfig} [config] config of the row
    * @returns {number} line number of the printed
    * @see drawLine
