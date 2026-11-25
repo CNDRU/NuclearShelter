@@ -9,7 +9,7 @@
     "saveCompressedData": false,
     "saveFiles": 10,
     "scroll": true,
-    "static": "csv"
+    "static": "json"
   },
   "window": {
     "audio": 100,
