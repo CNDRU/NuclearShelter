@@ -430,7 +430,7 @@ const era = {
   printLineChart(config) {},
   /**
    * print multiple columns into a row, excluding inputs
-   * @param {GridObject[]} columnObjects the array of settings of columns, like print, printButton, printImage and printProgress
+   * @param {[{button: {width: number}, content: string, type: string, accelerator: number}]} columnObjects the array of settings of columns, like print, printButton, printImage and printProgress
    * @param {ColumnConfig} [config] config of the row
    * @returns {number} line number of the printed
    * @see drawLine

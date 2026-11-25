@@ -1,31 +1,48 @@
 const era = require('#/era-electron');
 const maps = require('#/map/MapNodes.json');
 module.exports = async () => {
-    era.set("Flags:cur_map_node",0);
-    let nowNodeId = era.get("Flags:cur_map_node");
-    await era.clear()
+   // let nowNodeId = era.get("Flags:cur_map_node");
+    init()
+    render()
+    let flag = true
+    while(flag) {
+        const ret = await era.input();
+        if (ret === -1) {
+            era.set("Flags:render_player_state", !era.get("Flags:render_player_state"))
+            render()
+        }
+    }
+};
+function render(){
+    era.clear()
     renderState()
     renderMapUI()
-};
+}
+function init(){
+    era.set("Flags:cur_map_node",0);
+    era.set("Flags:render_player_state",false);
+}
 
 function renderState(){
-    era.printMultiColumns([
-        { config: { width: 24 }, content: '状态', type: 'text' },
-        { config: { width: 4 }, content: '精力', type: 'text' },
-        { config: { width: 4 }, content: '焦虑', type: 'text' },
-        { config: { width: 4 }, content: '强迫', type: 'text' },
-        { config: { width: 4 }, content: '抑郁', type: 'text' },
-        { config: { width: 4 }, content: '创伤', type: 'text' },
-        { config: { width: 4 }, content: '辐射', type: 'text' },
-        { config: { width: 24, content: '' }, type: 'divider' },
-        { config: { width: 24 }, content: '属性', type: 'text' },
-        { config: { width: 4 }, content: '诡术', type: 'text' },
-        { config: { width: 4 }, content: '意识形态', type: 'text' },
-        { config: { width: 4 }, content: '力量', type: 'text' },
-        { config: { width: 4 }, content: '灵巧', type: 'text' },
-        { config: { width: 4 }, content: '医术', type: 'text' },
-        { config: { width: 4 }, content: '知识', type: 'text' },
-    ])
+    era.printMultiColumns( [{button: {width: 24}, content: '状态', type: 'button',accelerator: -1, config:{align: 'center'}}])
+    if(era.get("Flags:render_player_state")) {
+        era.printMultiColumns([
+            {config: {width: 4}, content: '精力', type: 'text'},
+            {config: {width: 4}, content: '焦虑', type: 'text'},
+            {config: {width: 4}, content: '强迫', type: 'text'},
+            {config: {width: 4}, content: '抑郁', type: 'text'},
+            {config: {width: 4}, content: '创伤', type: 'text'},
+            {config: {width: 4}, content: '辐射', type: 'text'},
+            //{ config: { width: 24, content: '' }, type: 'divider' },
+            {config: {width: 24}, content: '属性', type: 'text'},
+            {config: {width: 4}, content: '诡术', type: 'text'},
+            {config: {width: 4}, content: '意识形态', type: 'text'},
+            {config: {width: 4}, content: '力量', type: 'text'},
+            {config: {width: 4}, content: '灵巧', type: 'text'},
+            {config: {width: 4}, content: '医术', type: 'text'},
+            {config: {width: 4}, content: '知识', type: 'text'},
+        ])
+    }
 }
 
 function renderMapUI() {
@@ -39,52 +56,6 @@ function renderMapUI() {
     era.print(node.name);
     era.print(node.desc);
     era.drawLine();
-    /*
-        // ========== 相邻节点：例如A节点右侧跳夜莺街 ==========
-        if (`MapNodes:${id}:${neighbor_right}` !== undefined) {
-            const rightNode = getMapNodeById(`MapNodes:id:neighbor_right`);
-
-            if (id.neighbor_left !== undefined) {
-                const leftNode = getMapNodeById(`MapNodes:${id}:neighbor_left`);
-
-                    era.printButton(`←前往左侧：MapNodes:${id}:neighbor_left:title`, () => {
-                        era.set("Flags:cur_map_node", leftNode);
-                        renderMapUI();
-                    })
-
-            }
-
-            era.drawLine();
-            // ========== 子节点：进入嵌套下层（大地图→街道，街道→建筑） ==========
-            for (const childId of id.children) {
-                const childNode = getMapNodeById(childId);
-                era.printButton(`进入：${childNode.name}`, () => {
-                    era.set("Flags:cur_map_node", childId);
-                    renderMapUI();
-                })
-            }
-
-            era.drawLine();
-            // ========== 返回上一级（父节点） ==========
-            if (id.parent !== -1) {
-                const parentNode = getMapNodeById(id.parent);
-                era.printButton(`← 返回：${parentNode.name}`, () => {
-                    era.set("Flags:cur_map_node", id.parent);
-                    renderMapUI();
-                })
-            }
-
-            // 如果是最底层建筑，可以增加【进入建筑事件】按钮
-            if (id.level === 2) {
-                era.printButton("【进入建筑触发事件】", () => {
-                    triggerBuildingEvent(id.id);
-                })
-            }
-        }
-
-
-    }
-     */
 }
 function triggerBuildingEvent(nodeId) {
     era.clear();
@@ -106,3 +77,5 @@ function getMapNodeById(nodeId){
     }
     return null;
 }
+
+
