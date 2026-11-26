@@ -1,32 +1,82 @@
 {
-  "牛津街": {
+  "特蕾莎街": {
     "id":0,
-    "name":"牛津街",
+    "name":"特蕾莎街\nTereza St.",
     "x": 0,
     "y": 0,
     "level":0,
     "parent":-1,
     "children":[],
-    "desc":"学校"
+    "desc":"社会化抚育区"
   },
-  "高街": {
+  "雅各宾街": {
     "id":1,
-    "name":"高街",
+    "name":"雅各宾街\nJacobin St.",
     "level":0,
     "x": 1,
     "y": 0,
     "parent":-1,
     "children":[],
-    "desc":"热闹的商业街"
+    "desc":"物资分配区域"
   },
-  "夜莺街": {
+  "南丁格尔街": {
     "id":2,
-    "name":"夜莺街",
+    "name":"南丁格尔街\nNightningale St.",
     "x": 0,
     "y": 1,
     "level":0,
     "parent":-1,
     "children":[],
     "desc":"医疗区"
-  }
+  },
+  "干草街": {
+    "id":3,
+    "name":"干草街\nHay st.",
+    "x": 0,
+    "y": -1,
+    "level":0,
+    "parent":-1,
+    "children":[],
+    "desc":"劳动教育实践区"
+  },
+  "萨拉热窝大街": {
+    "id":4,
+    "name":"萨拉热窝大街\nSarajevo St.",
+    "x": 1,
+    "y": 1,
+    "level":0,
+    "parent":-1,
+    "children":[],
+    "desc":"接驳区"
+  },
+  "清津街": {
+    "id":5,
+    "name":"清津街\n청진 St.",
+    "x": -1,
+    "y": 0,
+    "level":0,
+    "parent":-1,
+    "children":[],
+    "desc":"地方政府所在地"
+  },
+  "厄普街": {
+    "id":6,
+    "name":"厄普街\nErap St.",
+    "x": -1,
+    "y": -1,
+    "level":0,
+    "parent":-1,
+    "children":[],
+    "desc":"治安区"
+  },
+  "伊斯坦布尔街": {
+    "id":7,
+    "name":"伊斯坦布尔街\nİstanbul St.",
+    "x": 2,
+    "y": 0,
+    "level":0,
+    "parent":-1,
+    "children":[],
+    "desc":"海关"
+  },
 }
