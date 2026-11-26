@@ -1,82 +1,113 @@
 {
   "特蕾莎街": {
-    "id":0,
-    "name":"特蕾莎街\nTereza St.",
+    "id": 1000,
+    "name": "Tereza St.",
     "x": 0,
     "y": 0,
-    "level":0,
-    "parent":-1,
-    "children":[],
-    "desc":"社会化抚育区"
+    "level": 0,
+    "parent": -1,
+    "children": [2000],
+    "desc": "社会化抚育区"
+  },
+  "苏格拉底街": {
+    "id": 1001,
+    "name": "Σωκράτης St.",
+    "x": 1,
+    "y": 0,
+    "level": 0,
+    "parent": -1,
+    "children": [],
+    "desc": "教学区"
   },
   "雅各宾街": {
-    "id":1,
-    "name":"雅各宾街\nJacobin St.",
-    "level":0,
-    "x": 1,
+    "id": 1002,
+    "name": "Jacobin St.",
+    "x": -1,
     "y": 0,
-    "parent":-1,
-    "children":[],
-    "desc":"物资分配区域"
+    "level": 0,
+    "parent": -1,
+    "children": [],
+    "desc": "物资分配区域"
   },
   "南丁格尔街": {
-    "id":2,
-    "name":"南丁格尔街\nNightningale St.",
+    "id": 1003,
+    "name": "Nightingale St.",
     "x": 0,
     "y": 1,
-    "level":0,
-    "parent":-1,
-    "children":[],
-    "desc":"医疗区"
+    "level": 0,
+    "parent": -1,
+    "children": [],
+    "desc": "医疗区"
   },
-  "干草街": {
-    "id":3,
-    "name":"干草街\nHay st.",
+  "干草市场街": {
+    "id": 1004,
+    "name": "Haymarket St.",
     "x": 0,
     "y": -1,
-    "level":0,
-    "parent":-1,
-    "children":[],
-    "desc":"劳动教育实践区"
+    "level": 0,
+    "parent": -1,
+    "children": [],
+    "desc": "劳动教育实践区"
   },
   "萨拉热窝大街": {
-    "id":4,
-    "name":"萨拉热窝大街\nSarajevo St.",
+    "id": 1005,
+    "name": "Sarajevo St.",
     "x": 1,
     "y": 1,
-    "level":0,
-    "parent":-1,
-    "children":[],
-    "desc":"接驳区"
+    "level": 0,
+    "parent": -1,
+    "children": [],
+    "desc": "接驳区"
   },
   "清津街": {
-    "id":5,
-    "name":"清津街\n청진 St.",
-    "x": -1,
+    "id": 1006,
+    "name": "청진 St.",
+    "x": -2,
     "y": 0,
-    "level":0,
-    "parent":-1,
-    "children":[],
-    "desc":"地方政府所在地"
+    "level": 0,
+    "parent": -1,
+    "children": [],
+    "desc": "地方政府所在地"
   },
   "厄普街": {
-    "id":6,
-    "name":"厄普街\nErap St.",
+    "id": 1007,
+    "name": "Earp St.",
     "x": -1,
     "y": -1,
-    "level":0,
-    "parent":-1,
-    "children":[],
-    "desc":"治安区"
+    "level": 0,
+    "parent": -1,
+    "children": [],
+    "desc": "治安区"
   },
   "伊斯坦布尔街": {
-    "id":7,
-    "name":"伊斯坦布尔街\nİstanbul St.",
+    "id": 1008,
+    "name": "İstanbul St.",
     "x": 2,
     "y": 0,
-    "level":0,
-    "parent":-1,
-    "children":[],
-    "desc":"海关"
+    "level": 0,
+    "parent": -1,
+    "children": [],
+    "desc": "海关"
   },
+  "特蕾莎街-抚养所": {
+    "id": 2000,
+    "name": "抚养所",
+    "x": 0,
+    "y": 0,
+    "level": 1,
+    "parent": 1000,
+    "children": [3000],
+    "desc": "你的居住地"
+  },
+  "抚养所-自己的房间": {
+    "id": 3000,
+    "name": "自己的房间",
+    "x": 0,
+    "y": 0,
+    "level": 2,
+    "parent": 2000,
+    "children": [],
+    "desc": "一张窄床，一盏灯。",
+    "actions": ["sleep"]
+  }
 }

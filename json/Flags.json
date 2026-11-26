@@ -1,5 +1,10 @@
 {
     "cur_map_node":{"id":0},
     "render_player_state":{"id":1},
-    "is_at_title":{"id":2}
+    "is_at_title":{"id":2},
+    "time_minutes":{"id":3},
+    "drunk_helped":{"id":4},
+    "schedule_open":{"id":5},
+    "locale":{"id":6},
+    "attendance":{"id":7}
 }

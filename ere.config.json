@@ -7,7 +7,7 @@
     "hideUserInput": false,
     "resource": false,
     "saveCompressedData": false,
-    "saveFiles": 10,
+    "saveFiles": 128,
     "scroll": true,
     "static": "json"
   },
