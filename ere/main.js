@@ -106,7 +106,7 @@ function startNewGame(month) {
     era.set("Flags:schedule_open", 1);
     era.set("Flags:backpack_open", 0);
     era.set("Flags:inventory", {});
-    era.set("Flags:gunmu",0 );
+    era.set("Flags:gunmu", 0);
     // 250 μSv，按 1/60 μSv 为单位存成整数（见 movement.js）
     era.set("Flags:radiation", 250 * 60);
 }

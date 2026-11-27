@@ -8,9 +8,6 @@ const maps = require('#/map/MapNodes.json');
  * 前缀就是父节点 id，父层级无歧义；每个父节点下的序号不限量，深度也不限量。
  */
 
-/** 没写 radiation 时的默认背景辐射（μSv/h）。 */
-const DEFAULT_RADIATION = 1;
-
 /** 新游戏的起始节点（自己的房间）。 */
 const START_NODE_ID = '1000-1-1';
 
@@ -65,12 +62,12 @@ function isValidNodeId(nodeId) {
 }
 
 /**
- * 节点的背景辐射（μSv/h，整数）。没写或写错时退回默认值。
+ * 节点的背景辐射（μSv/h）。必须显式声明，没写时校验会报警，这里按 0 处理。
  * @param {object} node
  */
 function radiationOf(node) {
     const value = Number(node.radiation);
-    return Number.isFinite(value) && value >= 0 ? value : DEFAULT_RADIATION;
+    return Number.isFinite(value) && value >= 0 ? value : 0;
 }
 
 /**
@@ -222,7 +219,6 @@ function validateMapData() {
 
 module.exports = {
     START_NODE_ID,
-    DEFAULT_RADIATION,
     maps,
     layerHash,
     isMapNode,

@@ -8,6 +8,9 @@ const COLORS = {
     positive: '#67c23a',
     negative: '#f56c6c',
     illegal: '#f56c6c',
+    late: '#e6a23c',
+    missed: '#f56c6c',
+    reminder: '#ffffff',
     'chance-high': '#67c23a',
     'chance-medium': '#e6a23c',
     'chance-low': '#f56c6c'

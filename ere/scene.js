@@ -1,6 +1,7 @@
 const era = require('#/era-electron');
 const {t} = require('#/i18n');
 const effects = require('#/effects');
+const events = require('#/events');
 const condition = require('#/condition');
 const screen = require('#/screen');
 const ui = require('#/ui');
@@ -14,28 +15,32 @@ function describe(context) {
 }
 
 /**
- * 运行一段事件。
- * event: { steps?: step[], effects?: object }
- *   event.effects 在整段事件结束后结算一次。
- * step:  { textKey?: string, text?: string|((context)=>string), minutes?: number,
- *          effects?: object,
- *          choices?: [{ labelKey?: string, label?: string, steps?: step[], effects?: object }] }
+ * 运行一段事件，返回结果：
+ *   minutes 事件额外消耗的分钟数
+ *   move    事件把玩家带到的节点 id（没有就是 null）
  *
- * 有 choices 的步骤走完所选分支后，本段事件结束（分支里可以继续嵌套 steps）。
+ * event: { steps?: step[], effects?: object, move?: string }
+ * step:  { textKey?, text?, minutes?, effects?, move?, event?, choices? }
+ *   event  嵌套事件表（表名或对象），掷中后继续执行，形成事件链
+ *   move   事件结果：移动到的节点 id
+ *   choices 分支，选中后执行该分支的 steps/effects/move，本段事件结束
  *
- * @param {{steps?: Array, effects?: object}} event
+ * @param {{steps?: Array, effects?: object, move?: string}} event
  * @param {object} context
- * @returns {Promise<number>} 事件额外消耗的分钟数
+ * @returns {Promise<{minutes:number, move:string|null}>}
  */
 async function run(event, context) {
-    let extra = await runSteps(event.steps || [], context);
-    extra += effects.apply(event.effects, context);
-    return extra;
+    const outcome = {minutes: 0, move: null};
+    await runSteps(event.steps || [], context, outcome);
+    outcome.minutes += effects.apply(event.effects, context);
+    if (event.move !== undefined && event.move !== null) {
+        outcome.move = event.move;
+    }
+    return outcome;
 }
 
-async function runSteps(steps, context) {
+async function runSteps(steps, context, outcome) {
     const params = describe(context);
-    let extra = 0;
     for (let i = 0; i < steps.length; i++) {
         const step = steps[i];
         const text = step.textKey !== undefined
@@ -44,23 +49,37 @@ async function runSteps(steps, context) {
         if (text) {
             era.print(text);
         }
-        extra += step.minutes || 0;
-        extra += effects.apply(step.effects, context);
-
+        outcome.minutes += step.minutes || 0;
+        outcome.minutes += effects.apply(step.effects, context);
+        if (step.move !== undefined && step.move !== null) {
+            outcome.move = step.move;
+        }
+        if (step.event !== undefined) {
+            const picked = events.roll(events.resolve(step.event), context);
+            if (picked !== null) {
+                const nested = await run(picked, context);
+                outcome.minutes += nested.minutes;
+                if (nested.move !== null) {
+                    outcome.move = nested.move;
+                }
+            }
+        }
         if (step.choices && step.choices.length > 0) {
             const picked = await choose(step.choices, params, context);
             if (picked !== null) {
-                extra += effects.apply(picked.effects, context);
-                extra += await runSteps(picked.steps || [], context);
+                outcome.minutes += effects.apply(picked.effects, context);
+                if (picked.move !== undefined && picked.move !== null) {
+                    outcome.move = picked.move;
+                }
+                await runSteps(picked.steps || [], context, outcome);
             }
-            return extra;
+            return outcome;
         }
-
         if (i < steps.length - 1) {
             await next();
         }
     }
-    return extra;
+    return outcome;
 }
 
 /**
@@ -88,6 +107,7 @@ async function choose(choices, params, context) {
     await clearLastLine();
     return target !== null && target.kind === 'sceneChoice' ? target.choice : null;
 }
+
 /** 打出「下一步」并等待点击。 */
 async function next() {
     screen.reset();

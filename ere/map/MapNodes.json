@@ -94,15 +94,15 @@
     "name": "抚养所",
     "level": 1,
     "parent": "1000",
-    "radiation": 1,
-    "desc": "你的居住地"
+    "radiation": 0,
+    "desc": "“家”"
   },
   "抚养所-自己的房间": {
     "id": "1000-1-1",
     "name": "自己的房间",
     "level": 2,
     "parent": "1000-1",
-    "radiation": 1,
+    "radiation": 0,
     "desc": "一张窄床，一盏灯。",
     "actions": ["sleep"]
   }

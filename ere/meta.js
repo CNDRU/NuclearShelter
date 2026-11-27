@@ -4,7 +4,7 @@ const util = require('#/util');
 
 /**
  * 括号里的片段：耗时、辐射、额外信息。
- * 每段都带颜色，供 toCells 拆成单色文本单元。
+ * 每段都带颜色，供 spanCell 组装成带颜色的文本片段。
  * @param {number} minutes
  * @param {number} rate 当地辐射（μSv/h）
  * @param {Array<{text:string, tone:string}>} [info]
@@ -72,34 +72,4 @@ function spanCell(parts, width) {
     };
 }
 
-/**
- * 把片段拆成一排单色文本单元，宽度合计 totalWidth。
- * 用每个单元自己的 config.color 上色，避免富文本在网格里失效。
- * @param {Array<{text:string, color:string}>} parts
- * @param {number} totalWidth
- */
-function toCells(parts, totalWidth) {
-    const lengths = parts.map((part) => visualLength(part.text));
-    const total = lengths.reduce((sum, value) => sum + value, 0) || 1;
-    const cells = [];
-    let used = 0;
-    parts.forEach((part, index) => {
-        const left = parts.length - index;
-        let width;
-        if (index === parts.length - 1) {
-            width = Math.max(1, totalWidth - used);
-        } else {
-            width = Math.round(totalWidth * lengths[index] / total);
-            width = Math.max(1, Math.min(width, totalWidth - used - (left - 1)));
-        }
-        used += width;
-        cells.push({
-            config: {width, align: 'left', color: part.color},
-            content: part.text,
-            type: 'text'
-        });
-    });
-    return cells;
-}
-
-module.exports = {segments, toCells, visualLength, linkWidth, spanCell};
+module.exports = {segments, visualLength, linkWidth, spanCell};

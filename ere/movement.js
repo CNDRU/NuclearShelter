@@ -3,6 +3,7 @@ const {t} = require('#/i18n');
 const map_data = require('#/map-data');
 const time = require('#/time');
 const action = require('#/action');
+const events = require('#/events');
 
 const {TRAVEL} = require('#/data/encounters');
 
@@ -14,22 +15,6 @@ const ENTER_MINUTES = 0;
 
 function sameLayer(from, to) {
     return String(from.parent) === String(to.parent);
-}
-
-/**
- * 按出发地的背景辐射累积到玩家身上。
- * Flags:radiation 的单位是 1/60 μSv（= 1 μSv/h × 1 分钟），保证整数：
- *   剂量 += 出发地速率（μSv/h）× 本次耗时（分钟）
- * 1 小时 = 60 单位 = 1 μSv。
- * @param {object} from 出发地节点
- * @param {number} minutes 本次移动实际耗时
- */
-function addRadiation(from, minutes) {
-    if (!(minutes > 0)) {
-        return;
-    }
-    const current = Number(era.get("Flags:radiation")) || 0;
-    era.set("Flags:radiation", current + map_data.radiationOf(from) * minutes);
 }
 
 /**
@@ -60,9 +45,11 @@ async function moveTo(nodeId) {
 
     const fromName = t(from.name);
     const toName = t(to.name);
+    // 事件挂在目标节点上；没写就用同层移动的默认表
+    const table = events.tableOf(to) || (sameLayer(from, to) ? TRAVEL : null);
 
     if (sameLayer(from, to)) {
-        const total = await action.perform({
+        await action.perform({
             label: t('travel.heading', {to: toName}),
             minutes: MOVE_MINUTES,
             context: {from, to},
@@ -71,16 +58,15 @@ async function moveTo(nodeId) {
                 duration: time.formatDuration(total),
                 to: toName
             }),
-            encounters: TRAVEL,
-            onDone: () => era.set("Flags:cur_map_node", to.id)
+            encounters: table,
+            move: to.id
         });
-        addRadiation(from, total);
         return true;
     }
 
     const entering = String(to.parent) === String(from.id);
     const leaving = String(from.parent) === String(to.id);
-    const total = await action.perform({
+    await action.perform({
         label: entering
             ? t('travel.enter_heading', {to: toName})
             : t('travel.return_heading', {to: toName}),
@@ -91,10 +77,10 @@ async function moveTo(nodeId) {
             : (leaving
                 ? t('travel.return', {to: toName})
                 : t('travel.arrive_other', {to: toName})),
-        onDone: () => era.set("Flags:cur_map_node", to.id)
+        encounters: table,
+        move: to.id
     });
-    addRadiation(from, total);
     return true;
 }
 
-module.exports = {MOVE_MINUTES, ENTER_MINUTES, costOf, moveTo, addRadiation};
+module.exports = {MOVE_MINUTES, ENTER_MINUTES, costOf, moveTo};

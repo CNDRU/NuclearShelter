@@ -3,12 +3,14 @@ const {t} = require('#/i18n');
 const time = require('#/time');
 const scene = require('#/scene');
 const effects = require('#/effects');
+const events = require('#/events');
+const map_data = require('#/map-data');
 
 /**
  * 统一约定：
  * 1. 任何消耗时间的操作都必须走 perform()，禁止直接写 Flags:time_minutes。
- * 2. perform() 固定负责：过程文字 → 随机事件 → 结算 effects → 推进时间 → 跨天提示 → 收尾文字。
- * 3. 随机事件只往 data/encounters.js 的表里加，不改这里的逻辑。
+ * 2. perform() 固定负责：过程文字 → 掷事件 → 结算 effects → 推进时间 → 跨天提示 → 收尾文字 → 应用事件结果。
+ * 3. 事件可以嵌套成链（step.event），结果里可以带 move 把玩家带到别的节点。
  * 4. 清屏由「回合开始时」统一做；动作内部只允许 clear(1) 清掉自己刚印的按钮。
  *
  * @param {{
@@ -19,6 +21,7 @@ const effects = require('#/effects');
  *   endText?: string|((total:number)=>string),
  *   encounters?: {chance:number, entries:Array},
  *   effects?: object,
+ *   move?: string,
  *   onDone?: function
  * }} options
  */
@@ -31,6 +34,7 @@ async function perform(options) {
         endText,
         encounters,
         effects: actionEffects,
+        move,
         onDone
     } = options;
 
@@ -39,16 +43,21 @@ async function perform(options) {
     }
 
     let total = minutes;
-    const event = roll(encounters, context);
+    let outcome = {minutes: 0, move: null};
+    const event = events.roll(encounters, context);
     if (event !== null) {
-        total += await scene.run(event, context);
+        outcome = await scene.run(event, context);
     }
+    total += outcome.minutes;
     total += effects.apply(actionEffects, context);
 
     const change = time.advance(total);
     if (change.dayPassed) {
         era.print(t('action.day_passed', {clock: time.formatClock()}));
     }
+
+    // 背景辐射 = 当前地点的强度 × 本次耗时（移动时仍是出发地）
+    addRadiation(total);
 
     const text = typeof endText === 'function'
         ? endText(total)
@@ -60,6 +69,12 @@ async function perform(options) {
         era.print(text);
     }
 
+    // 事件结果优先于原本的移动目标
+    const destination = outcome.move !== null ? outcome.move : move;
+    if (destination !== undefined && destination !== null) {
+        era.set("Flags:cur_map_node", String(destination));
+    }
+
     if (onDone) {
         onDone();
     }
@@ -68,30 +83,19 @@ async function perform(options) {
 }
 
 /**
- * 按概率 + 权重掷一个事件，没中返回 null。
- * @param {{chance?:number, entries:Array}} table
- * @param {object} context
+ * 按当前地点的背景辐射累积到玩家身上。
+ * @param {number} minutes 本次耗时
  */
-function roll(table, context) {
-    if (!table || !Array.isArray(table.entries) || table.entries.length === 0) {
-        return null;
+function addRadiation(minutes) {
+    if (!(minutes > 0)) {
+        return;
     }
-    if (Math.random() >= (table.chance ?? 0)) {
-        return null;
+    const node = map_data.getMapNodeById(era.get("Flags:cur_map_node"));
+    if (node === null) {
+        return;
     }
-    const available = table.entries.filter((entry) =>
-        typeof entry.when === 'function' ? entry.when(context) : true);
-    if (available.length === 0) {
-        return null;
-    }
-    let rest = Math.random() * available.reduce((sum, entry) => sum + (entry.weight ?? 1), 0);
-    for (const entry of available) {
-        rest -= entry.weight ?? 1;
-        if (rest <= 0) {
-            return entry;
-        }
-    }
-    return available[available.length - 1];
+    const current = Number(era.get("Flags:radiation")) || 0;
+    era.set("Flags:radiation", current + map_data.radiationOf(node) * minutes);
 }
 
-module.exports = {perform, roll};
+module.exports = {perform};

@@ -7,7 +7,7 @@ const scene = require('#/scene');
 const screen = require('#/screen');
 const map_data = require('#/map-data');
 const meta = require('#/meta');
-const icons = require('#/icons');
+const events = require('#/events');
 const ui = require('#/ui');
 const {HOURS} = require('#/data/sleep');
 
@@ -21,23 +21,17 @@ async function openSleep() {
     era.drawLine({content: t('sleep.title')});
     era.print(t('sleep.prompt'));
     const node = map_data.getMapNodeById(era.get("Flags:cur_map_node"));
-    const rate = node === null ? map_data.DEFAULT_RADIATION : map_data.radiationOf(node);
+    const rate = node === null ? 0 : map_data.radiationOf(node);
     for (const hours of HOURS) {
-        const label = t('sleep.hours', {n: hours});
-        const resource = icons.resourceOf(undefined);
-        const available = 23;
-        const linkWidth = Math.min(available, meta.linkWidth(label));
-        era.printMultiColumns([
-            icons.cell(resource, 1),
-            {
-                config: ui.buttonConfig('primary', {width: linkWidth, align: 'left'}),
-                content: label,
-                type: 'button',
-                accelerator: screen.assign({kind: 'sleepHours', hours}),
-                rl: resource
-            },
-            meta.spanCell(meta.segments(hours * 60, rate, []), available - linkWidth)
-        ], {verticalAlign: 'middle'});
+        era.printMultiColumns(
+            ui.optionRow(
+                undefined,
+                t('sleep.hours', {n: hours}),
+                screen.assign({kind: 'sleepHours', hours}),
+                meta.segments(hours * 60, rate, [])
+            ),
+            ui.ROW_CONFIG
+        );
     }
     era.printButton(t('ui.cancel'), screen.assign({kind: 'back'}), ui.buttonConfig('primary', {
         width: 24,
@@ -55,8 +49,10 @@ async function openSleep() {
     await action.perform({
         label: t('sleep.title'),
         minutes: hours * 60,
+        context: {node},
         startText: t('sleep.start'),
-        endText: () => t('sleep.end', {clock: time.formatClock()})
+        endText: () => t('sleep.end', {clock: time.formatClock()}),
+        encounters: events.tableOf(node)
     });
     await era.saveData(0, t('save.auto', {stamp: util.formatLocalTime()}));
     await scene.continuePage();

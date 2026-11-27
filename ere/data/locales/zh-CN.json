@@ -60,6 +60,7 @@
     "stat.depression": "抑郁",
     "stat.trauma": "创伤",
     "stat.radiation": "辐射",
+    "stat.radiation_value": "辐射{value}",
 
     "attr.trickery": "诡术",
     "attr.ideology": "意识形态",
@@ -79,7 +80,7 @@
     "map.node_missing": "地图节点不存在！",
     "map.no_actions": "（这里暂时没有可做的事）",
     "map.back": "← {name}",
-    "map.radiation": "当地辐射：{value} μSv/h",
+    "map.radiation": "当地辐射：{value}",
 
     "info.radiation_up": "辐射+",
     "info.radiation_down": "辐射-",

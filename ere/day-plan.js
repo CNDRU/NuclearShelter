@@ -6,13 +6,12 @@ const attendance = require('#/attendance');
 const school = require('#/school');
 const screen = require('#/screen');
 const ui = require('#/ui');
+const tones = require('#/tones');
 
-/** 迟到 / 没去的文字颜色。 */
-const LATE_COLOR = '#e6a23c';
-const MISSED_COLOR = '#f56c6c';
-
-/** 提醒文字的颜色。 */
-const REMINDER_COLOR = '#ffffff';
+/** 迟到 / 没去 / 提醒的文字颜色。 */
+const LATE_COLOR = tones.colorOf('late');
+const MISSED_COLOR = tones.colorOf('missed');
+const REMINDER_COLOR = tones.colorOf('reminder');
 
 /**
  * 打印当天的安排（带考勤状态）。

@@ -10,6 +10,9 @@
  */
 const DEFAULT_ICON = 'default';
 
+/** 图标占的列数。 */
+const WIDTH = 1;
+
 /**
  * 选项的 rl → 实际资源名；不要图标时返回 null。
  * @param {string|boolean|undefined} rl
@@ -37,4 +40,4 @@ function cell(name, width) {
     };
 }
 
-module.exports = {DEFAULT_ICON, resourceOf, cell};
+module.exports = {DEFAULT_ICON, WIDTH, resourceOf, cell};

@@ -36,4 +36,4 @@ function resolve(accelerator) {
     return target === undefined ? null : target;
 }
 
-module.exports = {TOKEN_BASE, reset, assign, resolve};
+module.exports = {reset, assign, resolve};
