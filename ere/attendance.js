@@ -10,7 +10,8 @@ function dayIndex() {
 }
 
 function todayItems() {
-    return schedule[time.now().weekday] || [];
+    const current = time.now();
+    return schedule.itemsFor(current.weekday, current.season);
 }
 
 function minuteOfDay() {

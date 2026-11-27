@@ -67,6 +67,10 @@
     "title.load": "读取存档",
     "title.settings": "设置",
 
+    "create.title": "新的开始",
+    "create.prompt": "选择开始的季节：",
+    "create.confirm": "开始",
+
     "map.node_missing": "地图节点不存在！",
     "map.no_actions": "（这里暂时没有可做的事）",
     "map.back": "← {name}",
@@ -108,6 +112,9 @@
     "schedule.late": "你今天迟到了",
     "schedule.school.missed": "你今天没去上学",
     "schedule.labor.missed": "你今天没去劳动",
+    "reminder.no_school_tomorrow": "明天不用上学",
+    "reminder.new_term": "新学期在 {days} 天后开始",
+    "reminder.tomorrow": "明天要{text}",
 
     "event.drunk.arrive": "在去{to}的路上，一个醉汉从阴影里晃出来，挡住了你。",
     "event.drunk.ask": "他盯着你手里的提灯：“借个火，就一下。”",

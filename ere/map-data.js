@@ -1,10 +1,15 @@
 const maps = require('#/map/MapNodes.json');
 
-/** 节点 id 固定为 4 位十进制：首位标记地图，后三位是地图内序号。 */
-const MAP_ID_LENGTH = 4;
+/**
+ * 节点 id 是「父子路径」字符串：
+ *   1000          主地图节点
+ *   1000-1        1000 的子节点 1
+ *   1000-1-1      1000-1 的子节点 1
+ * 前缀就是父节点 id，父层级无歧义；每个父节点下的序号不限量，深度也不限量。
+ */
 
 /** 新游戏的起始节点（自己的房间）。 */
-const START_NODE_ID = 3000;
+const START_NODE_ID = '1000-1-1';
 
 /** parent 键 -> Map("x,y" -> 节点)，每一层地图各一份坐标索引。 */
 const layerHash = new Map();
@@ -17,37 +22,43 @@ function isMapNode(node) {
     return node.parent === -1;
 }
 
-/**
- * 把节点 id 拆成「地图标记 + 地图内序号」，全部用字符串处理。
- * @param {number|string} nodeId
- * @returns {{map:string, local:string}|null} 长度不是 4 位时返回 null
- */
-function splitNodeId(nodeId) {
-    const text = String(nodeId);
-    if (text.length !== MAP_ID_LENGTH) {
-        return null;
-    }
-    return {map: text.slice(0, 1), local: text.slice(1)};
+/** @param {string|number} nodeId */
+function idSegments(nodeId) {
+    return String(nodeId).split('-');
 }
 
 /**
- * 取地图标记（1 为主地图，2-9 为子地图）。
- * @param {number|string} nodeId
- * @returns {string|null}
+ * 层数（主地图 = 1）。
+ * @param {string|number} nodeId
  */
-function mapNoOf(nodeId) {
-    const parts = splitNodeId(nodeId);
-    return parts === null ? null : parts.map;
+function idDepth(nodeId) {
+    return idSegments(nodeId).length;
 }
 
 /**
- * 取地图内序号。
- * @param {number|string} nodeId
- * @returns {string|null}
+ * 自己那一段的序号。
+ * @param {string|number} nodeId
  */
-function localNoOf(nodeId) {
-    const parts = splitNodeId(nodeId);
-    return parts === null ? null : parts.local;
+function idLocal(nodeId) {
+    const segments = idSegments(nodeId);
+    return segments[segments.length - 1];
+}
+
+/**
+ * 父节点 id；主地图节点返回 null。
+ * @param {string|number} nodeId
+ */
+function parentIdOf(nodeId) {
+    const segments = idSegments(nodeId);
+    return segments.length > 1 ? segments.slice(0, -1).join('-') : null;
+}
+
+/**
+ * 是否是合法节点 id：正整数的 '-' 路径，每段不带前导零。
+ * @param {string|number} nodeId
+ */
+function isValidNodeId(nodeId) {
+    return /^[1-9]\d*(-[1-9]\d*)*$/.test(String(nodeId));
 }
 
 /**
@@ -66,7 +77,7 @@ function initMapHash() {
 
 /**
  * 取某一层地图上 (x, y) 处的节点。
- * @param {number} parent 该层的 parent 值（主地图为 -1）
+ * @param {number|string} parent 该层的 parent 值（主地图为 -1）
  * @param {number} x
  * @param {number} y
  */
@@ -80,20 +91,20 @@ function getLayerNode(parent, x, y) {
 }
 
 /**
- * 取某个节点的下一层子节点，按 id 升序。
- * @param {number} nodeId
+ * 取某个节点的下一层子节点，按序号升序。
+ * @param {number|string} nodeId
  */
 function getChildren(nodeId) {
     const key = String(nodeId);
     return Object.values(maps)
         .filter((node) => String(node.parent) === key)
-        .sort((a, b) => Number(a.id) - Number(b.id));
+        .sort((a, b) => Number(idLocal(a.id)) - Number(idLocal(b.id)));
 }
 
 /**
  * 按节点 id 查找节点，找不到时返回 null。
  * 用字符串比较，兼容 flag / 存档里读回来是字符串的情况。
- * @param {number|string} nodeId
+ * @param {string|number} nodeId
  */
 function getMapNodeById(nodeId) {
     const key = String(nodeId);
@@ -111,15 +122,14 @@ function getMapNodeById(nodeId) {
  */
 function validateMapData() {
     const issues = [];
-    const idPattern = /^[1-9]\d{3}$/;
     const byId = new Map();
     const childrenByParent = new Map();
 
     // 第一遍：编号格式、重复、父索引
     Object.entries(maps).forEach(([name, node]) => {
         const idText = String(node.id);
-        if (!idPattern.test(idText)) {
-            issues.push(`节点「${name}」的 id「${idText}」不合法：必须是 4 位数字且首位为 1-9`);
+        if (!isValidNodeId(idText)) {
+            issues.push(`节点「${name}」的 id「${idText}」不合法：应为父子路径，例如 1000 / 1000-1 / 1000-1-1`);
             return;
         }
         if (byId.has(idText)) {
@@ -138,22 +148,24 @@ function validateMapData() {
 
     const coords = new Map();
 
-    // 第二遍：层级、parent 存在性、坐标
+    // 第二遍：父子路径一致性、坐标
     byId.forEach(({name, node}, idText) => {
-        const mapNo = idText.slice(0, 1);
+        const depth = idDepth(idText);
         if (isMapNode(node)) {
-            if (mapNo !== '1') {
-                issues.push(`主节点「${name}」的 id「${idText}」首位应为 1`);
+            if (depth !== 1) {
+                issues.push(`主节点「${name}」的 id「${idText}」不应带父路径`);
             }
         } else {
             const parentInfo = byId.get(String(node.parent));
             if (parentInfo === undefined) {
                 issues.push(`节点「${name}」的 parent「${node.parent}」不存在`);
             } else {
-                const parentNo = Number(String(parentInfo.node.id).slice(0, 1));
-                const expected = parentNo + 1;
-                if (Number(mapNo) !== expected) {
-                    issues.push(`子节点「${name}」的 id「${idText}」首位应为 ${expected}（父节点「${parentInfo.name}」在第 ${parentNo} 层）`);
+                const expected = parentIdOf(idText);
+                if (String(node.parent) !== String(expected)) {
+                    issues.push(`节点「${name}」的 id「${idText}」前缀应是父节点「${expected}」，实际写的是「${node.parent}」`);
+                }
+                if (idDepth(parentInfo.node.id) !== depth - 1) {
+                    issues.push(`节点「${name}」的父节点在第 ${idDepth(parentInfo.node.id)} 层，自己应在第 ${idDepth(parentInfo.node.id) + 1} 层`);
                 }
             }
         }
@@ -207,14 +219,14 @@ function validateMapData() {
 }
 
 module.exports = {
-    MAP_ID_LENGTH,
     START_NODE_ID,
     maps,
     layerHash,
     isMapNode,
-    splitNodeId,
-    mapNoOf,
-    localNoOf,
+    idDepth,
+    idLocal,
+    parentIdOf,
+    isValidNodeId,
     initMapHash,
     getLayerNode,
     getChildren,

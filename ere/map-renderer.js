@@ -1,7 +1,10 @@
 const era = require('#/era-electron');
 const {t} = require('#/i18n');
+const util = require('#/util');
 const map_data = require('#/map-data');
 const action_registry = require('#/actions');
+const screen = require('#/screen');
+const {MOVE_MINUTES} = require('#/movement');
 
 const CELL_WIDTH = 8;
 
@@ -62,14 +65,24 @@ function printActions(node) {
     if (!map_data.isMapNode(node)) {
         const parent = map_data.getMapNodeById(node.parent);
         if (parent !== null) {
-            buttons.push(actionCell(t('map.back', {name: t(parent.name)}), parent.id));
+            buttons.push(actionCell(
+                t('map.back', {name: t(parent.name)}),
+                screen.assign({kind: 'move', id: parent.id})
+            ));
         }
     }
     for (const child of map_data.getChildren(node.id)) {
-        buttons.push(actionCell(displayName(child), child.id));
+        buttons.push(actionCell(
+            displayName(child),
+            screen.assign({kind: 'move', id: child.id})
+        ));
     }
     for (const action of action_registry.actionsFor(node)) {
-        buttons.push(actionCell(t(action.textKey), action.accelerator));
+        buttons.push(actionCell(
+            t(action.textKey),
+            screen.assign({kind: 'action', id: action.id}),
+            action.cost ? action.cost() : null
+        ));
     }
     if (buttons.length === 0) {
         era.print(t('map.no_actions'));
@@ -78,13 +91,15 @@ function printActions(node) {
     era.printInColRows(buttons);
 }
 
-/** 邻居：可点击的按钮。 */
+/** 邻居：可点击的按钮，名字后面带同层移动的耗时。加速键用本屏临时编号。 */
 function nodeCell(node) {
+    const lines = displayName(node).split('\n');
+    lines[0] = `${lines[0]} (${util.formatCost(MOVE_MINUTES)})`;
     return {
         config: {width: CELL_WIDTH, align: 'center'},
-        content: displayName(node),
+        content: lines.join('\n'),
         type: 'button',
-        accelerator: node.id
+        accelerator: screen.assign({kind: 'move', id: node.id})
     };
 }
 
@@ -97,10 +112,16 @@ function currentCell(node) {
     };
 }
 
-function actionCell(content, accelerator) {
+/**
+ * 动作按钮。costText 不为空时在文字后面加 (耗时)。
+ * @param {string} content
+ * @param {number} accelerator
+ * @param {string|null} [costText]
+ */
+function actionCell(content, accelerator, costText) {
     return {
         config: {width: CELL_WIDTH, align: 'center'},
-        content: content,
+        content: costText ? `${content} (${costText})` : content,
         type: 'button',
         accelerator: accelerator
     };

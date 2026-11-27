@@ -1,15 +1,7 @@
 const era = require('#/era-electron');
 const {t} = require('#/i18n');
 const effects = require('#/effects');
-
-/** 「下一步」按钮的加速键。 */
-const NEXT_ACC = 1;
-
-/** 「继续」按钮的加速键（叙述页结束时用）。 */
-const CONTINUE_ACC = 2;
-
-/** 选项按钮的加速键从 1 开始。 */
-const CHOICE_ACC_BASE = 1;
+const screen = require('#/screen');
 
 /** 把上下文里的节点名翻译成当前语言。 */
 function describe(context) {
@@ -76,22 +68,23 @@ async function runSteps(steps, context) {
  * @returns {Promise<object|null>}
  */
 async function choose(choices, params) {
-    const buttons = choices.map((choice, i) => ({
+    screen.reset();
+    const buttons = choices.map((choice) => ({
         config: {width: 8, disableContinue: true, showAcc: false},
         content: choice.labelKey !== undefined ? t(choice.labelKey, params) : choice.label,
         type: 'button',
-        accelerator: CHOICE_ACC_BASE + i
+        accelerator: screen.assign({kind: 'sceneChoice', choice})
     }));
     era.printInColRows(buttons);
-    const ret = await era.input({hideInput: true});
+    const target = screen.resolve(await era.input({hideInput: true}));
     await clearLastLine();
-    const index = ret - CHOICE_ACC_BASE;
-    return index >= 0 && index < choices.length ? choices[index] : null;
+    return target !== null && target.kind === 'sceneChoice' ? target.choice : null;
 }
 
 /** 打出「下一步」并等待点击。 */
 async function next() {
-    era.printButton(t('ui.next'), NEXT_ACC, {
+    screen.reset();
+    era.printButton(t('ui.next'), screen.assign({kind: 'sceneNext'}), {
         width: 8,
         disableContinue: true,
         showAcc: false
@@ -109,7 +102,8 @@ async function clearLastLine() {
  * 叙述页的收尾：整屏只留一个「继续」，点击后由调用方切到地图页。
  */
 async function continuePage() {
-    era.printButton(t('ui.continue'), CONTINUE_ACC, {
+    screen.reset();
+    era.printButton(t('ui.continue'), screen.assign({kind: 'continue'}), {
         width: 24,
         align: 'center',
         disableContinue: true,
@@ -119,4 +113,4 @@ async function continuePage() {
     await clearLastLine();
 }
 
-module.exports = {run, NEXT_ACC, CONTINUE_ACC, continuePage};
+module.exports = {run, continuePage};

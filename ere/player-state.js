@@ -1,7 +1,7 @@
 const era = require('#/era-electron');
 const {t} = require('#/i18n');
 const time = require('#/time');
-const keys = require('#/keys');
+const screen = require('#/screen');
 
 /**
  * 状态区。
@@ -22,8 +22,8 @@ function renderPlayerState(options) {
     }
     if (interactive) {
         era.printMultiColumns([
-            {content: t('ui.status'), type: 'button', accelerator: keys.status, config: {width: 12, align: 'center'}},
-            {content: t('ui.pause'), type: 'button', accelerator: keys.pause, config: {width: 12, align: 'center'}},
+            {content: t('ui.status'), type: 'button', accelerator: screen.assign({kind: 'status'}), config: {width: 12, align: 'center'}},
+            {content: t('ui.pause'), type: 'button', accelerator: screen.assign({kind: 'pause'}), config: {width: 12, align: 'center'}},
         ]);
     }
     if (era.get("Flags:render_player_state")) {

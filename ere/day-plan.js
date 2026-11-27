@@ -3,13 +3,15 @@ const {t} = require('#/i18n');
 const time = require('#/time');
 const schedule = require('#/data/schedule');
 const attendance = require('#/attendance');
-const keys = require('#/keys');
-
-const TOGGLE_ACC = keys.dayPlan;
+const school = require('#/school');
+const screen = require('#/screen');
 
 /** 迟到 / 没去的文字颜色。 */
 const LATE_COLOR = '#e6a23c';
 const MISSED_COLOR = '#f56c6c';
+
+/** 提醒文字的颜色。 */
+const REMINDER_COLOR = '#79bbff';
 
 /**
  * 打印当天的安排（带考勤状态）。
@@ -17,7 +19,7 @@ const MISSED_COLOR = '#f56c6c';
  */
 function renderPlanItems(now) {
     const current = now || time.now();
-    const items = schedule[current.weekday] || [];
+    const items = schedule.itemsFor(current.weekday, current.season);
     if (items.length === 0) {
         era.print(t('ui.no_plan'));
         return;
@@ -38,7 +40,32 @@ function renderPlanItems(now) {
 }
 
 /**
- * 今日安排折叠栏：标题始终显示星期，展开后列出当天的安排。
+ * 提醒区：
+ * - 今天没安排、明天有安排 → 「明天要…」；
+ * - 春秋：明天没课就提示「明天不用上学」；
+ * - 冬夏：提示新学期还有几天。
+ * @param {object} now
+ */
+function renderReminder(now) {
+    const tomorrow = now.weekday % 7 + 1;
+    const todayItems = schedule.itemsFor(now.weekday, now.season);
+    const tomorrowItems = schedule.itemsFor(tomorrow, now.season);
+    if (todayItems.length === 0) {
+        for (const item of tomorrowItems) {
+            era.print(t('reminder.tomorrow', {text: t(item.textKey)}), {color: REMINDER_COLOR});
+        }
+    }
+    if (school.isSchoolSeason(now.season)) {
+        if (!school.hasSchoolTomorrow()) {
+            era.print(t('reminder.no_school_tomorrow'), {color: REMINDER_COLOR});
+        }
+        return;
+    }
+    era.print(t('reminder.new_term', {days: school.daysToNextTerm()}), {color: REMINDER_COLOR});
+}
+
+/**
+ * 今日安排折叠栏：标题始终显示星期，展开后列出当天的安排，再下面一行提醒。
  */
 function renderDayPlan() {
     if (era.get("Flags:is_at_title")) {
@@ -53,12 +80,12 @@ function renderDayPlan() {
             weekday: now.weekdayName
         }),
         type: 'button',
-        accelerator: TOGGLE_ACC
+        accelerator: screen.assign({kind: 'dayPlan'})
     }]);
-    if (!open) {
-        return;
+    if (open) {
+        renderPlanItems(now);
     }
-    renderPlanItems(now);
+    renderReminder(now);
 }
 
 /** 切换折叠状态。 */
@@ -66,4 +93,4 @@ function toggle() {
     era.set("Flags:schedule_open", !era.get("Flags:schedule_open"));
 }
 
-module.exports = {renderDayPlan, renderPlanItems, toggle};
+module.exports = {renderDayPlan, renderPlanItems, renderReminder, toggle};

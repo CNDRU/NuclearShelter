@@ -2,24 +2,12 @@ const era = require('#/era-electron');
 const {t} = require('#/i18n');
 const time = require('#/time');
 const util = require('#/util');
-const keys = require('#/keys');
 const map_data = require('#/map-data');
 const day_plan = require('#/day-plan');
+const screen = require('#/screen');
 
 /** 存档栏位上限，与 ere.config.json 的 system.saveFiles 保持一致。 */
 const SLOT_MAX = 128;
-
-/** 各子界面的「返回」。 */
-const BACK_ACC = keys.back;
-
-/** 「新建存档」按钮。 */
-const NEW_ACC = keys.newSave;
-
-/** 删除按钮的加速键偏移（1000 + 栏位号）。 */
-const DELETE_BASE = keys.deleteBase;
-
-const YES_ACC = 1;
-const NO_ACC = 2;
 
 function placeName() {
     const node = map_data.getMapNodeById(era.get("Flags:cur_map_node"));
@@ -77,7 +65,10 @@ function button(accelerator, content, align, width) {
 }
 
 function yesNoButtons() {
-    return [button(YES_ACC, t('ui.yes'), 'center', 12), button(NO_ACC, t('ui.no'), 'center', 12)];
+    return [
+        button(screen.assign({kind: 'yes'}), t('ui.yes'), 'center', 12),
+        button(screen.assign({kind: 'no'}), t('ui.no'), 'center', 12)
+    ];
 }
 
 /**
@@ -87,52 +78,61 @@ async function openPause() {
     let running = true;
     while (running) {
         await era.clear();
+        screen.reset();
         era.drawLine({content: t('pause.title')});
         era.print(t('info.time', {clock: time.formatClock()}));
         era.print(t('info.place', {place: placeName()}));
         era.printMultiColumns([
-            button(1, t('pause.save'), 'center'),
-            button(2, t('pause.load'), 'center'),
-            button(3, t('pause.info'), 'center'),
-            button(BACK_ACC, t('pause.resume'), 'center')
+            button(screen.assign({kind: 'pauseSave'}), t('pause.save'), 'center'),
+            button(screen.assign({kind: 'pauseLoad'}), t('pause.load'), 'center'),
+            button(screen.assign({kind: 'pauseInfo'}), t('pause.info'), 'center'),
+            button(screen.assign({kind: 'pauseResume'}), t('pause.resume'), 'center')
         ]);
-        const ret = await era.input({hideInput: true});
-        if (ret === 1) {
+        const target = screen.resolve(await era.input({hideInput: true}));
+        if (target === null) {
+            continue;
+        }
+        if (target.kind === 'pauseSave') {
             await openSave();
-        } else if (ret === 2) {
+        } else if (target.kind === 'pauseLoad') {
             if (await openLoad()) {
                 return;
             }
-        } else if (ret === 3) {
+        } else if (target.kind === 'pauseInfo') {
             await openInfo();
-        } else if (ret === BACK_ACC) {
+        } else if (target.kind === 'pauseResume') {
             running = false;
         }
     }
 }
 
 /**
- * 询问存档名。默认名是存档瞬间的时间。
+ * 询问存档名。默认名是存档瞬间的本地时间。
  * @param {string} defaultName
  * @returns {Promise<string|null>} null 表示取消
  */
 async function askName(defaultName) {
     await era.clear();
+    screen.reset();
     era.drawLine({content: t('save.name_title')});
     era.print(t('save.default_name', {name: defaultName}));
     era.printMultiColumns([
-        button(1, t('save.use_default'), 'center', 12),
-        button(2, t('save.custom_name'), 'center', 12)
+        button(screen.assign({kind: 'nameDefault'}), t('save.use_default'), 'center', 12),
+        button(screen.assign({kind: 'nameCustom'}), t('save.custom_name'), 'center', 12)
     ]);
-    era.printButton(t('ui.cancel'), BACK_ACC, {width: 24, align: 'center', showAcc: false});
-    const ret = await era.input({hideInput: true});
-    if (ret === BACK_ACC) {
+    era.printButton(t('ui.cancel'), screen.assign({kind: 'back'}), {
+        width: 24,
+        align: 'center',
+        showAcc: false
+    });
+    const target = screen.resolve(await era.input({hideInput: true}));
+    if (target === null || target.kind === 'back') {
         return null;
     }
-    if (ret === 1) {
+    if (target.kind === 'nameDefault') {
         return defaultName;
     }
-    if (ret !== 2) {
+    if (target.kind !== 'nameCustom') {
         return null;
     }
 
@@ -150,99 +150,120 @@ async function openSave() {
     let running = true;
     while (running) {
         await era.clear();
+        screen.reset();
         era.drawLine({content: t('save.title')});
         const cells = existingSlots()
             .filter((slot) => slot.index >= 1)
-            .map((slot) => button(slot.index, `${slot.index}. ${slot.comment}`));
-        cells.push(button(NEW_ACC, t('save.new'), 'center'));
-        cells.push(button(BACK_ACC, t('ui.back'), 'right'));
+            .map((slot) => button(
+                screen.assign({kind: 'saveSlot', index: slot.index}),
+                `${slot.index}. ${slot.comment}`
+            ));
+        cells.push(button(screen.assign({kind: 'saveNew'}), t('save.new'), 'center'));
+        cells.push(button(screen.assign({kind: 'back'}), t('ui.back'), 'right'));
         era.printMultiColumns(cells);
 
-        const ret = await era.input({hideInput: true});
-        if (ret === BACK_ACC) {
+        const target = screen.resolve(await era.input({hideInput: true}));
+        if (target === null) {
+            continue;
+        }
+        if (target.kind === 'back') {
             running = false;
             continue;
         }
-
-        let slot = null;
-        if (ret === NEW_ACC) {
-            slot = nextFreeSlot();
-        } else if (ret >= 1 && ret <= SLOT_MAX) {
-            slot = ret;
-        }
-        if (slot === null) {
-            if (ret === NEW_ACC) {
+        if (target.kind === 'saveNew') {
+            const slot = nextFreeSlot();
+            if (slot === null) {
                 era.notify(t('save.full'), t('pause.title'), 'error');
-            }
-            continue;
-        }
-
-        if (commentOf(slot) !== null) {
-            await era.clear();
-            era.print(t('save.overwrite', {slot}));
-            era.printMultiColumns(yesNoButtons());
-            if ((await era.input({hideInput: true})) !== YES_ACC) {
                 continue;
             }
+            const name = await askName(util.formatLocalTime());
+            if (name === null) {
+                continue;
+            }
+            const ok = await era.saveData(slot, name);
+            era.notify(ok ? t('save.done', {slot}) : t('save.failed'), t('pause.title'), ok ? 'success' : 'error');
+        } else if (target.kind === 'saveSlot') {
+            const slot = target.index;
+            if (commentOf(slot) !== null) {
+                await era.clear();
+                screen.reset();
+                era.print(t('save.overwrite', {slot}));
+                era.printMultiColumns(yesNoButtons());
+                const answer = screen.resolve(await era.input({hideInput: true}));
+                if (answer === null || answer.kind !== 'yes') {
+                    continue;
+                }
+            }
+            const name = await askName(util.formatLocalTime());
+            if (name === null) {
+                continue;
+            }
+            const ok = await era.saveData(slot, name);
+            era.notify(ok ? t('save.done', {slot}) : t('save.failed'), t('pause.title'), ok ? 'success' : 'error');
         }
-
-        const name = await askName(util.formatLocalTime());
-        if (name === null) {
-            continue;
-        }
-        const ok = await era.saveData(slot, name);
-        era.notify(
-            ok ? t('save.done', {slot}) : t('save.failed'),
-            t('pause.title'),
-            ok ? 'success' : 'error'
-        );
     }
 }
 
 /**
- * 读取界面：列出已有存档，每行带删除按钮；空栏位不显示。
+ * 读取界面：列出已有存档，每行带删除按钮。
  * @returns {Promise<boolean>} 是否读档成功
  */
 async function openLoad() {
     let running = true;
     while (running) {
         await era.clear();
+        screen.reset();
         era.drawLine({content: t('load.version', {version: gameVersion()})});
         const cells = [];
         for (const slot of existingSlots()) {
             const lost = isLost(slot.comment);
-            cells.push(button(slot.index, `${slot.index}. ${slot.comment}`, 'left', 20));
-            cells[cells.length - 1].config.disabled = lost;
-            cells.push(button(DELETE_BASE + slot.index, t('load.delete'), 'right', 4));
+            const cell = button(
+                screen.assign({kind: 'loadSlot', index: slot.index}),
+                `${slot.index}. ${slot.comment}`,
+                'left',
+                20
+            );
+            cell.config.disabled = lost;
+            cells.push(cell);
+            cells.push(button(
+                screen.assign({kind: 'deleteSlot', index: slot.index}),
+                t('load.delete'),
+                'right',
+                4
+            ));
         }
-        cells.push(button(BACK_ACC, t('ui.back'), 'right'));
+        cells.push(button(screen.assign({kind: 'back'}), t('ui.back'), 'right'));
         era.printMultiColumns(cells);
 
-        const ret = await era.input({hideInput: true});
-        if (ret === BACK_ACC) {
+        const target = screen.resolve(await era.input({hideInput: true}));
+        if (target === null) {
+            continue;
+        }
+        if (target.kind === 'back') {
             running = false;
             continue;
         }
-        if (ret >= DELETE_BASE) {
-            const index = ret - DELETE_BASE;
+        if (target.kind === 'deleteSlot') {
             await era.clear();
-            era.print(t('load.delete_confirm', {slot: index}));
+            screen.reset();
+            era.print(t('load.delete_confirm', {slot: target.index}));
             era.printMultiColumns(yesNoButtons());
-            if ((await era.input({hideInput: true})) === YES_ACC) {
-                await era.rmData(index);
-                era.notify(t('load.deleted', {slot: index}), t('pause.title'), 'success');
+            const answer = screen.resolve(await era.input({hideInput: true}));
+            if (answer !== null && answer.kind === 'yes') {
+                await era.rmData(target.index);
+                era.notify(t('load.deleted', {slot: target.index}), t('pause.title'), 'success');
             }
             continue;
         }
-
-        const slot = existingSlots().find((item) => item.index === ret);
-        if (slot === undefined || isLost(slot.comment)) {
-            continue;
+        if (target.kind === 'loadSlot') {
+            if (isLost(commentOf(target.index))) {
+                continue;
+            }
+            if (await era.loadData(target.index)) {
+                return true;
+            }
+            era.notify(t('load.failed'), t('pause.title'), 'error');
         }
-        if (await era.loadData(ret)) {
-            return true;
-        }
-        era.notify(t('load.failed'), t('pause.title'), 'error');
     }
     return false;
 }
@@ -252,14 +273,19 @@ async function openLoad() {
  */
 async function openInfo() {
     await era.clear();
+    screen.reset();
     era.drawLine({content: t('info.title')});
     const now = time.now();
     era.print(t('info.time', {clock: time.formatClock()}));
     era.print(t('info.place', {place: placeName()}));
     era.print(t('info.plan', {weekday: now.weekdayName}));
     day_plan.renderPlanItems(now);
-    era.printButton(t('ui.back'), BACK_ACC, {width: 24, align: 'center', showAcc: false});
+    era.printButton(t('ui.back'), screen.assign({kind: 'back'}), {
+        width: 24,
+        align: 'center',
+        showAcc: false
+    });
     await era.input({hideInput: true});
 }
 
-module.exports = {NEW_ACC, BACK_ACC, SLOT_MAX, openPause, openSave, openLoad, openInfo};
+module.exports = {SLOT_MAX, openPause, openSave, openLoad, openInfo};

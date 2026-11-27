@@ -1,13 +1,3 @@
-const titlePrefix = "-100";
-
-/**
- * 动作系列的加速键前缀：每个系列一段，段内用 numberPrefix(前缀, 序号)。
- * 标题是 -100（-1000 ~ -1002），动作从 -200 起，下一个系列用 -300，依此类推。
- */
-const actionPrefixes = {
-    sleep: "-200"
-};
-
 function deserializePos(pos) {
     const raw = pos.split(',').map(Number);
     return [raw[0], raw[1]];
@@ -17,8 +7,13 @@ function serializePos(pos) {
     return `${pos[0]},${pos[1]}`;
 }
 
-function numberPrefix(prefix, num) {
-    return Number(prefix + num);
+/**
+ * 耗时显示：15 → "0:15"；480 → "8:00"。
+ * @param {number} minutes
+ */
+function formatCost(minutes) {
+    const value = Math.max(0, Math.round(minutes));
+    return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;
 }
 
 /**
@@ -33,10 +28,8 @@ function formatLocalTime(date) {
 }
 
 module.exports = {
-    titlePrefix,
-    actionPrefixes,
     serializePos,
-    numberPrefix,
     deserializePos,
+    formatCost,
     formatLocalTime,
 };

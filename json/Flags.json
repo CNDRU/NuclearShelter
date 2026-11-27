@@ -6,5 +6,6 @@
     "drunk_helped":{"id":4},
     "schedule_open":{"id":5},
     "locale":{"id":6},
-    "attendance":{"id":7}
+    "attendance":{"id":7},
+    "weekday_offset":{"id":8}
 }

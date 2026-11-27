@@ -4,10 +4,8 @@ const time = require('#/time');
 const util = require('#/util');
 const action = require('#/action');
 const scene = require('#/scene');
-const keys = require('#/keys');
+const screen = require('#/screen');
 const {HOURS} = require('#/data/sleep');
-
-const CANCEL_ACC = keys.back;
 
 /**
  * 睡觉：选时长 → 推进时间 → 自动存档到 0 号位 → 叙述页。
@@ -15,20 +13,26 @@ const CANCEL_ACC = keys.back;
  */
 async function openSleep() {
     await era.clear();
+    screen.reset();
     era.drawLine({content: t('sleep.title')});
     era.print(t('sleep.prompt'));
     era.printMultiColumns(HOURS.map((hours) => ({
         config: {width: 8, align: 'center'},
-        content: t('sleep.hours', {n: hours}),
+        content: `${t('sleep.hours', {n: hours})} (${util.formatCost(hours * 60)})`,
         type: 'button',
-        accelerator: hours
+        accelerator: screen.assign({kind: 'sleepHours', hours})
     })));
-    era.printButton(t('ui.cancel'), CANCEL_ACC, {width: 24, align: 'center', showAcc: false});
+    era.printButton(t('ui.cancel'), screen.assign({kind: 'back'}), {
+        width: 24,
+        align: 'center',
+        showAcc: false
+    });
 
-    const hours = await era.input({hideInput: true});
-    if (!HOURS.includes(hours)) {
+    const target = screen.resolve(await era.input({hideInput: true}));
+    if (target === null || target.kind !== 'sleepHours') {
         return false;
     }
+    const hours = target.hours;
 
     await era.clear();
     await action.perform({
