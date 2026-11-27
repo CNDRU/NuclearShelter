@@ -5,7 +5,7 @@
     "disableClear": false,
     "extendedCharaTables": [],
     "hideUserInput": false,
-    "resource": false,
+    "resource": true,
     "saveCompressedData": false,
     "saveFiles": 128,
     "scroll": true,
