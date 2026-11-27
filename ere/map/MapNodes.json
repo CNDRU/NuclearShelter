@@ -6,7 +6,7 @@
     "y": 0,
     "level": 0,
     "parent": -1,
-    "children": ["1000-1"],
+    "radiation": 1,
     "desc": "社会化抚育区"
   },
   "苏格拉底街": {
@@ -16,7 +16,7 @@
     "y": 0,
     "level": 0,
     "parent": -1,
-    "children": [],
+    "radiation": 1,
     "desc": "教学区"
   },
   "雅各宾街": {
@@ -26,7 +26,7 @@
     "y": 0,
     "level": 0,
     "parent": -1,
-    "children": [],
+    "radiation": 1,
     "desc": "物资分配区域"
   },
   "南丁格尔街": {
@@ -36,7 +36,7 @@
     "y": 1,
     "level": 0,
     "parent": -1,
-    "children": [],
+    "radiation": 1,
     "desc": "医疗区"
   },
   "干草市场街": {
@@ -46,7 +46,7 @@
     "y": -1,
     "level": 0,
     "parent": -1,
-    "children": [],
+    "radiation": 1,
     "desc": "劳动教育实践区"
   },
   "萨拉热窝大街": {
@@ -56,7 +56,7 @@
     "y": 1,
     "level": 0,
     "parent": -1,
-    "children": [],
+    "radiation": 1,
     "desc": "接驳区"
   },
   "清津街": {
@@ -66,7 +66,7 @@
     "y": 0,
     "level": 0,
     "parent": -1,
-    "children": [],
+    "radiation": 1,
     "desc": "地方政府所在地"
   },
   "厄普街": {
@@ -76,7 +76,7 @@
     "y": -1,
     "level": 0,
     "parent": -1,
-    "children": [],
+    "radiation": 1,
     "desc": "治安区"
   },
   "伊斯坦布尔街": {
@@ -86,27 +86,23 @@
     "y": 0,
     "level": 0,
     "parent": -1,
-    "children": [],
+    "radiation": 1,
     "desc": "海关"
   },
   "特蕾莎街-抚养所": {
     "id": "1000-1",
     "name": "抚养所",
-    "x": 0,
-    "y": 0,
     "level": 1,
     "parent": "1000",
-    "children": ["1000-1-1"],
+    "radiation": 1,
     "desc": "你的居住地"
   },
   "抚养所-自己的房间": {
     "id": "1000-1-1",
     "name": "自己的房间",
-    "x": 0,
-    "y": 0,
     "level": 2,
     "parent": "1000-1",
-    "children": [],
+    "radiation": 1,
     "desc": "一张窄床，一盏灯。",
     "actions": ["sleep"]
   }

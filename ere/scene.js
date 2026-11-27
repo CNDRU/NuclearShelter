@@ -1,6 +1,7 @@
 const era = require('#/era-electron');
 const {t} = require('#/i18n');
 const effects = require('#/effects');
+const condition = require('#/condition');
 const screen = require('#/screen');
 
 /** 把上下文里的节点名翻译成当前语言。 */
@@ -46,7 +47,7 @@ async function runSteps(steps, context) {
         extra += effects.apply(step.effects, context);
 
         if (step.choices && step.choices.length > 0) {
-            const picked = await choose(step.choices, params);
+            const picked = await choose(step.choices, params, context);
             if (picked !== null) {
                 extra += effects.apply(picked.effects, context);
                 extra += await runSteps(picked.steps || [], context);
@@ -62,14 +63,20 @@ async function runSteps(steps, context) {
 }
 
 /**
- * 打出一排选项并等待选择。
+ * 打出一排当前可见的选项并等待选择。
+ * 选项可以写 when(context) 控制是否出现；一个都不剩时返回 null（本段事件结束）。
  * @param {Array} choices
  * @param {object} params
+ * @param {object} context
  * @returns {Promise<object|null>}
  */
-async function choose(choices, params) {
+async function choose(choices, params, context) {
+    const visible = choices.filter((choice) => condition.test(choice.when, context));
+    if (visible.length === 0) {
+        return null;
+    }
     screen.reset();
-    const buttons = choices.map((choice) => ({
+    const buttons = visible.map((choice) => ({
         config: {width: 8, disableContinue: true, showAcc: false},
         content: choice.labelKey !== undefined ? t(choice.labelKey, params) : choice.label,
         type: 'button',
@@ -80,7 +87,6 @@ async function choose(choices, params) {
     await clearLastLine();
     return target !== null && target.kind === 'sceneChoice' ? target.choice : null;
 }
-
 /** 打出「下一步」并等待点击。 */
 async function next() {
     screen.reset();

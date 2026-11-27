@@ -3,6 +3,7 @@ const {t} = require('#/i18n');
 const util = require('#/util');
 const map_data = require('#/map-data');
 const action_registry = require('#/actions');
+const condition = require('#/condition');
 const screen = require('#/screen');
 const {MOVE_MINUTES} = require('#/movement');
 
@@ -17,10 +18,26 @@ function renderMapUI() {
         era.print(t('map.node_missing'));
         return;
     }
-    printNeighborhood(node);
+    if (map_data.isMapNode(node)) {
+        printNeighborhood(node);
+    } else {
+        era.print(displayName(node), {align: 'center'});
+    }
     era.print(t(node.desc));
+    era.print(t('map.radiation', {
+        value: util.formatRadiation(map_data.radiationOf(node))
+    }));
     era.drawLine();
     printActions(node);
+}
+
+/**
+ * 节点是否可见：node.when 可以是条件 id 或函数，不写表示永远可见。
+ * @param {object} node
+ * @param {object} current
+ */
+function isVisible(node, current) {
+    return condition.test(node.when, {node, current});
 }
 
 /**
@@ -47,7 +64,7 @@ function printNeighborhood(node) {
                 cells[k] = currentCell(node);
             } else {
                 const target = map_data.getLayerNode(node.parent, i, j);
-                cells[k] = target === null ? blankCell() : nodeCell(target);
+                cells[k] = target === null || !isVisible(target, node) ? blankCell() : nodeCell(target);
             }
             k++;
         }
@@ -72,6 +89,9 @@ function printActions(node) {
         }
     }
     for (const child of map_data.getChildren(node.id)) {
+        if (!isVisible(child, node)) {
+            continue;
+        }
         buttons.push(actionCell(
             displayName(child),
             screen.assign({kind: 'move', id: child.id})

@@ -2,6 +2,7 @@ const era = require('#/era-electron');
 const title = require('#/title');
 const player_state = require('#/player-state');
 const day_plan = require('#/day-plan');
+const backpack = require('#/backpack');
 const scene = require('#/scene');
 const pause = require('#/page-pause');
 const create = require('#/page-create');
@@ -40,6 +41,8 @@ module.exports = async () => {
             era.set("Flags:render_player_state", !era.get("Flags:render_player_state"));
         } else if (target.kind === 'dayPlan') {
             day_plan.toggle();
+        } else if (target.kind === 'backpack') {
+            backpack.toggle();
         } else if (target.kind === 'pause') {
             await pause.openPause();
             await era.clear();
@@ -79,6 +82,7 @@ async function render() {
     screen.reset();
     player_state.renderPlayerState();
     day_plan.renderDayPlan();
+    backpack.renderBackpack();
     map_renderer.renderMapUI();
     title.renderTitle();
 }
@@ -100,4 +104,9 @@ function startNewGame(month) {
     era.set("Flags:time_minutes", time.monthStartMinutes(month));
     era.set("Flags:weekday_offset", time.weekdayOffsetForMonth(month));
     era.set("Flags:schedule_open", 1);
+    era.set("Flags:backpack_open", 0);
+    era.set("Flags:inventory", {});
+    era.set("Flags:gunmu",0 );
+    // 250 μSv，按 1/60 μSv 为单位存成整数（见 movement.js）
+    era.set("Flags:radiation", 250 * 60);
 }

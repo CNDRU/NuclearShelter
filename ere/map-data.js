@@ -8,6 +8,9 @@ const maps = require('#/map/MapNodes.json');
  * 前缀就是父节点 id，父层级无歧义；每个父节点下的序号不限量，深度也不限量。
  */
 
+/** 没写 radiation 时的默认背景辐射（μSv/h）。 */
+const DEFAULT_RADIATION = 1;
+
 /** 新游戏的起始节点（自己的房间）。 */
 const START_NODE_ID = '1000-1-1';
 
@@ -62,11 +65,23 @@ function isValidNodeId(nodeId) {
 }
 
 /**
+ * 节点的背景辐射（μSv/h，整数）。没写或写错时退回默认值。
+ * @param {object} node
+ */
+function radiationOf(node) {
+    const value = Number(node.radiation);
+    return Number.isFinite(value) && value >= 0 ? value : DEFAULT_RADIATION;
+}
+
+/**
  * 按 parent 分组建立每一层地图的坐标索引。
  */
 function initMapHash() {
     layerHash.clear();
     for (const node of Object.values(maps)) {
+        if (!isMapNode(node)) {
+            continue;
+        }
         const key = String(node.parent);
         if (!layerHash.has(key)) {
             layerHash.set(key, new Map());
@@ -76,12 +91,15 @@ function initMapHash() {
 }
 
 /**
- * 取某一层地图上 (x, y) 处的节点。
- * @param {number|string} parent 该层的 parent 值（主地图为 -1）
+ * 取主地图上 (x, y) 处的节点。坐标只用于主地图，子层没有坐标。
+ * @param {number} parent 主地图固定为 -1
  * @param {number} x
  * @param {number} y
  */
 function getLayerNode(parent, x, y) {
+    if (String(parent) !== '-1') {
+        return null;
+    }
     const layer = layerHash.get(String(parent));
     if (layer === undefined) {
         return null;
@@ -123,9 +141,8 @@ function getMapNodeById(nodeId) {
 function validateMapData() {
     const issues = [];
     const byId = new Map();
-    const childrenByParent = new Map();
 
-    // 第一遍：编号格式、重复、父索引
+    // 第一遍：编号格式、重复
     Object.entries(maps).forEach(([name, node]) => {
         const idText = String(node.id);
         if (!isValidNodeId(idText)) {
@@ -137,13 +154,6 @@ function validateMapData() {
             return;
         }
         byId.set(idText, {name, node});
-        if (!isMapNode(node)) {
-            const parentKey = String(node.parent);
-            if (!childrenByParent.has(parentKey)) {
-                childrenByParent.set(parentKey, []);
-            }
-            childrenByParent.get(parentKey).push(idText);
-        }
     });
 
     const coords = new Map();
@@ -170,33 +180,25 @@ function validateMapData() {
             }
         }
 
-        if (!Number.isInteger(node.x) || !Number.isInteger(node.y)) {
-            issues.push(`节点「${name}」缺少有效的 x/y 坐标`);
+        if (isMapNode(node)) {
+            if (!Number.isInteger(node.x) || !Number.isInteger(node.y)) {
+                issues.push(`主节点「${name}」缺少有效的 x/y 坐标`);
+            } else {
+                const coordKey = `${node.x},${node.y}`;
+                if (coords.has(coordKey)) {
+                    issues.push(`主节点「${name}」与「${coords.get(coordKey)}」坐标重复（${node.x},${node.y}）`);
+                } else {
+                    coords.set(coordKey, name);
+                }
+            }
         }
-        const scope = isMapNode(node) ? 'main' : String(node.parent);
-        const coordKey = `${scope}:${node.x},${node.y}`;
-        if (coords.has(coordKey)) {
-            issues.push(`节点「${name}」与「${coords.get(coordKey)}」坐标重复（${node.x},${node.y}）`);
-        } else {
-            coords.set(coordKey, name);
+
+        if (!Number.isInteger(Number(node.radiation)) || Number(node.radiation) < 0) {
+            issues.push(`节点「${name}」的 radiation 必须是整数（μSv/h）`);
         }
     });
 
-    // 第三遍：children 必须与 parent 关系一致
-    byId.forEach(({name, node}, idText) => {
-        const listed = Array.isArray(node.children) ? node.children.map(String) : [];
-        const derived = childrenByParent.get(idText) || [];
-        const missing = derived.filter((id) => !listed.includes(id));
-        const extra = listed.filter((id) => !derived.includes(id));
-        if (missing.length > 0) {
-            issues.push(`节点「${name}」的 children 缺少 ${missing.join(', ')}`);
-        }
-        if (extra.length > 0) {
-            issues.push(`节点「${name}」的 children 多出 ${extra.join(', ')}（这些节点的 parent 不是它）`);
-        }
-    });
-
-    // 第四遍：parent 链不能成环
+    // 第三遍：parent 链不能成环
     byId.forEach(({name, node}, idText) => {
         const seen = new Set([idText]);
         let current = node;
@@ -220,6 +222,7 @@ function validateMapData() {
 
 module.exports = {
     START_NODE_ID,
+    DEFAULT_RADIATION,
     maps,
     layerHash,
     isMapNode,
@@ -227,6 +230,7 @@ module.exports = {
     idLocal,
     parentIdOf,
     isValidNodeId,
+    radiationOf,
     initMapHash,
     getLayerNode,
     getChildren,

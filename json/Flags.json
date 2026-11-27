@@ -7,5 +7,9 @@
     "schedule_open":{"id":5},
     "locale":{"id":6},
     "attendance":{"id":7},
-    "weekday_offset":{"id":8}
+    "weekday_offset":{"id":8},
+    "gunmu": {"id": 9},
+    "radiation": {"id": 10},
+    "backpack_open": {"id": 11},
+    "inventory": {"id": 12}
 }

@@ -63,6 +63,8 @@ async function perform(options) {
     if (onDone) {
         onDone();
     }
+
+    return total;
 }
 
 /**

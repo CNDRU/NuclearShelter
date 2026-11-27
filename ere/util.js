@@ -17,6 +17,14 @@ function formatCost(minutes) {
 }
 
 /**
+ * 辐射显示：整数 μSv，不带小数。
+ * @param {number} value
+ */
+function formatRadiation(value) {
+    return String(Math.round(Number(value) || 0));
+}
+
+/**
  * 格式化玩家电脑的本地时间，用于存档默认名。
  * @param {Date} [date]
  * @returns {string} 形如 "2026-11-26 20:53"
@@ -31,5 +39,6 @@ module.exports = {
     serializePos,
     deserializePos,
     formatCost,
+    formatRadiation,
     formatLocalTime,
 };

@@ -18,7 +18,18 @@ function renderPlayerState(options) {
         return;
     }
     if (showClock) {
-        era.print(time.formatClock(), {align: 'right'});
+        era.printMultiColumns([
+            {
+                config: {width: 12, align: 'left'},
+                content: t('ui.gunmu', {n: Number(era.get("Flags:gunmu")) || 0}),
+                type: 'text'
+            },
+            {
+                config: {width: 12, align: 'right'},
+                content: time.formatClock(),
+                type: 'text'
+            }
+        ]);
     }
     if (interactive) {
         era.printMultiColumns([
@@ -33,7 +44,7 @@ function renderPlayerState(options) {
             {config: {width: 4}, content: t('stat.compulsion'), type: 'text'},
             {config: {width: 4}, content: t('stat.depression'), type: 'text'},
             {config: {width: 4}, content: t('stat.trauma'), type: 'text'},
-            {config: {width: 4}, content: t('stat.radiation'), type: 'text'},
+            {config: {width: 4}, content: t('stat.radiation')+era.get("Flags:radiation")+"μSv", type: 'text'},
             {config: {width: 24}, content: t('ui.attributes'), type: 'text'},
             {config: {width: 4}, content: t('attr.trickery'), type: 'text'},
             {config: {width: 4}, content: t('attr.ideology'), type: 'text'},

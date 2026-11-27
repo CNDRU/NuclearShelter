@@ -1,3 +1,4 @@
+const condition = require('#/condition');
 const sleep = require('#/page-sleep');
 
 /**
@@ -5,6 +6,7 @@ const sleep = require('#/page-sleep');
  * 每个动作有：
  *   textKey  按钮文本
  *   cost()   可选，返回按钮上显示的耗时（如 "0:30"）
+ *   when()   可选，返回按钮是否可见（参数是 {node, now}）
  *   run()    执行动作
  *
  * 按钮的加速键由 screen 在本屏临时分配，动作 id 本身不参与输入，
@@ -18,13 +20,16 @@ const registry = {
 };
 
 /**
- * 取某个节点可用的动作，带上动作 id。
+ * 取某个节点当前可见的动作，带上动作 id。
  * @param {object} node
+ * @param {object} [context] 默认是 {node}
  */
-function actionsFor(node) {
+function actionsFor(node, context) {
+    const params = context || {node};
     return (node.actions || [])
         .filter((id) => registry[id] !== undefined)
-        .map((id) => ({id, ...registry[id]}));
+        .map((id) => ({id, ...registry[id]}))
+        .filter((action) => condition.test(action.when, params));
 }
 
 /**

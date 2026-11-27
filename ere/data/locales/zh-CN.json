@@ -48,6 +48,11 @@
     "sleep.end": "你醒了。现在是 {clock}。",
     "ui.day_plan": "今日",
     "ui.no_plan": "（今天没有安排）",
+    "ui.gunmu": "gunmu {n}",
+
+    "backpack.title": "{mark} 背包（{count}）",
+    "backpack.item": "· {name} ×{count}",
+    "backpack.empty": "（背包是空的）",
 
     "stat.energy": "精力",
     "stat.anxiety": "焦虑",
@@ -74,6 +79,7 @@
     "map.node_missing": "地图节点不存在！",
     "map.no_actions": "（这里暂时没有可做的事）",
     "map.back": "← {name}",
+    "map.radiation": "当地辐射：{value} μSv/h",
 
     "travel.heading": "前往{to}",
     "travel.enter_heading": "进入{to}",

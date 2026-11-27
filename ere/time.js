@@ -89,7 +89,7 @@ function formatDuration(minutes) {
 }
 
 /**
- * 某个月 1 日 08:00 的绝对分钟数。
+ * 某个月 1 日 07:00 的绝对分钟数。
  * @param {number} month 1-4
  */
 function monthStartMinutes(month) {
