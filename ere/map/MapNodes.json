@@ -2,91 +2,91 @@
   "特蕾莎街": {
     "id": "1000",
     "name": "Tereza St.",
-    "x": 0,
-    "y": 0,
     "level": 0,
     "parent": -1,
     "radiation": 1,
+    "rl": "teresa",
+    "neighbors": ["1001", "1002", "1003", "1004"],
     "desc": "社会化抚育区"
   },
   "苏格拉底街": {
     "id": "1001",
     "name": "Σωκράτης St.",
-    "x": 1,
-    "y": 0,
     "level": 0,
     "parent": -1,
     "radiation": 1,
+    "rl": "socrates",
+    "neighbors": ["1000", "1005", "1008"],
     "desc": "教学区"
   },
   "雅各宾街": {
     "id": "1002",
     "name": "Jacobin St.",
-    "x": -1,
-    "y": 0,
     "level": 0,
     "parent": -1,
     "radiation": 1,
+    "rl": "jacobin",
+    "neighbors": ["1000", "1006", "1007"],
     "desc": "物资分配区域"
   },
   "南丁格尔街": {
     "id": "1003",
     "name": "Nightingale St.",
-    "x": 0,
-    "y": 1,
     "level": 0,
     "parent": -1,
     "radiation": 1,
+    "rl": "nightingale",
+    "neighbors": ["1000"],
     "desc": "医疗区"
   },
   "干草市场街": {
     "id": "1004",
     "name": "Haymarket St.",
-    "x": 0,
-    "y": -1,
     "level": 0,
     "parent": -1,
     "radiation": 1,
+    "rl": "haymarket",
+    "neighbors": ["1000"],
     "desc": "劳动教育实践区"
   },
   "萨拉热窝大街": {
     "id": "1005",
     "name": "Sarajevo St.",
-    "x": 1,
-    "y": 1,
     "level": 0,
     "parent": -1,
     "radiation": 1,
+    "rl": "sarajevo",
+    "neighbors": ["1001"],
     "desc": "接驳区"
   },
   "清津街": {
     "id": "1006",
     "name": "청진 St.",
-    "x": -2,
-    "y": 0,
     "level": 0,
     "parent": -1,
     "radiation": 1,
+    "rl": "cheongjin",
+    "neighbors": ["1002"],
     "desc": "地方政府所在地"
   },
   "厄普街": {
     "id": "1007",
     "name": "Earp St.",
-    "x": -1,
-    "y": -1,
     "level": 0,
     "parent": -1,
     "radiation": 1,
+    "rl": "earp",
+    "neighbors": ["1002"],
     "desc": "治安区"
   },
   "伊斯坦布尔街": {
     "id": "1008",
     "name": "İstanbul St.",
-    "x": 2,
-    "y": 0,
     "level": 0,
     "parent": -1,
     "radiation": 1,
+    "rl": "istanbul",
+    "neighbors": ["1001"],
     "desc": "海关"
   },
   "特蕾莎街-抚养所": {
@@ -94,15 +94,15 @@
     "name": "抚养所",
     "level": 1,
     "parent": "1000",
-    "radiation": 0,
-    "desc": "“家”"
+    "radiation": 1,
+    "desc": "你的居住地"
   },
   "抚养所-自己的房间": {
     "id": "1000-1-1",
     "name": "自己的房间",
     "level": 2,
     "parent": "1000-1",
-    "radiation": 0,
+    "radiation": 1,
     "desc": "一张窄床，一盏灯。",
     "actions": ["sleep"]
   }

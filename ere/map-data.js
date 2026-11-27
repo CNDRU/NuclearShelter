@@ -11,9 +11,6 @@ const maps = require('#/map/MapNodes.json');
 /** 新游戏的起始节点（自己的房间）。 */
 const START_NODE_ID = '1000-1-1';
 
-/** parent 键 -> Map("x,y" -> 节点)，每一层地图各一份坐标索引。 */
-const layerHash = new Map();
-
 /**
  * 是否是主地图节点（顶层，parent === -1）。
  * @param {{parent:number}} node
@@ -71,41 +68,6 @@ function radiationOf(node) {
 }
 
 /**
- * 按 parent 分组建立每一层地图的坐标索引。
- */
-function initMapHash() {
-    layerHash.clear();
-    for (const node of Object.values(maps)) {
-        if (!isMapNode(node)) {
-            continue;
-        }
-        const key = String(node.parent);
-        if (!layerHash.has(key)) {
-            layerHash.set(key, new Map());
-        }
-        layerHash.get(key).set(`${node.x},${node.y}`, node);
-    }
-}
-
-/**
- * 取主地图上 (x, y) 处的节点。坐标只用于主地图，子层没有坐标。
- * @param {number} parent 主地图固定为 -1
- * @param {number} x
- * @param {number} y
- */
-function getLayerNode(parent, x, y) {
-    if (String(parent) !== '-1') {
-        return null;
-    }
-    const layer = layerHash.get(String(parent));
-    if (layer === undefined) {
-        return null;
-    }
-    const node = layer.get(`${x},${y}`);
-    return node === undefined ? null : node;
-}
-
-/**
  * 取某个节点的下一层子节点，按序号升序。
  * @param {number|string} nodeId
  */
@@ -132,7 +94,7 @@ function getMapNodeById(nodeId) {
 }
 
 /**
- * 校验地图数据的编号、坐标、父子关系与 children 一致性。
+ * 校验地图数据的编号、父子关系、邻居与辐射。
  * @returns {string[]} 问题列表，空数组表示没有问题
  */
 function validateMapData() {
@@ -153,9 +115,7 @@ function validateMapData() {
         byId.set(idText, {name, node});
     });
 
-    const coords = new Map();
-
-    // 第二遍：父子路径一致性、坐标
+    // 第二遍：父子路径一致性、邻居、辐射
     byId.forEach(({name, node}, idText) => {
         const depth = idDepth(idText);
         if (isMapNode(node)) {
@@ -177,21 +137,34 @@ function validateMapData() {
             }
         }
 
-        if (isMapNode(node)) {
-            if (!Number.isInteger(node.x) || !Number.isInteger(node.y)) {
-                issues.push(`主节点「${name}」缺少有效的 x/y 坐标`);
-            } else {
-                const coordKey = `${node.x},${node.y}`;
-                if (coords.has(coordKey)) {
-                    issues.push(`主节点「${name}」与「${coords.get(coordKey)}」坐标重复（${node.x},${node.y}）`);
-                } else {
-                    coords.set(coordKey, name);
-                }
-            }
-        }
-
         if (!Number.isInteger(Number(node.radiation)) || Number(node.radiation) < 0) {
             issues.push(`节点「${name}」的 radiation 必须是整数（μSv/h）`);
+        }
+
+        if (node.neighbors !== undefined) {
+            if (!Array.isArray(node.neighbors)) {
+                issues.push(`节点「${name}」的 neighbors 必须是数组`);
+                return;
+            }
+            const seen = new Set();
+            for (const neighborId of node.neighbors) {
+                const key = String(neighborId);
+                if (key === idText) {
+                    issues.push(`节点「${name}」的 neighbors 不能包含自己`);
+                    continue;
+                }
+                if (seen.has(key)) {
+                    issues.push(`节点「${name}」的 neighbors 重复：${key}`);
+                    continue;
+                }
+                seen.add(key);
+                const target = byId.get(key);
+                if (target === undefined) {
+                    issues.push(`节点「${name}」的 neighbors 指向不存在的节点「${key}」`);
+                } else if (String(target.node.parent) !== String(node.parent)) {
+                    issues.push(`节点「${name}」的 neighbors「${key}」不在同一层`);
+                }
+            }
         }
     });
 
@@ -220,15 +193,12 @@ function validateMapData() {
 module.exports = {
     START_NODE_ID,
     maps,
-    layerHash,
     isMapNode,
     idDepth,
     idLocal,
     parentIdOf,
     isValidNodeId,
     radiationOf,
-    initMapHash,
-    getLayerNode,
     getChildren,
     getMapNodeById,
     validateMapData,

@@ -4,10 +4,10 @@
     "collapseBlankLines": false,
     "disableClear": false,
     "extendedCharaTables": [],
-    "hideUserInput": false,
+    "hideUserInput": true,
     "resource": true,
     "saveCompressedData": false,
-    "saveFiles": 128,
+    "saveFiles": 99,
     "scroll": true,
     "static": "json"
   },

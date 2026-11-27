@@ -7,15 +7,10 @@ const condition = require('#/condition');
 const screen = require('#/screen');
 const ui = require('#/ui');
 const meta = require('#/meta');
+const map_view = require('#/map-view');
 const {MOVE_MINUTES} = require('#/movement');
 
-/** 同层可走的四个方向：上、右、下、左。 */
-const NEIGHBOR_OFFSETS = [
-    {dx: 0, dy: -1},
-    {dx: 1, dy: 0},
-    {dx: 0, dy: 1},
-    {dx: -1, dy: 0}
-];
+/** 同层移动的耗时由 movement 提供。 */
 
 function renderMapUI() {
     if (era.get("Flags:is_at_title")) {
@@ -33,6 +28,7 @@ function renderMapUI() {
     }));
     era.drawLine();
     printActions(node);
+    map_view.renderMapView(node);
 }
 
 /**
@@ -63,7 +59,7 @@ function displayName(node) {
 
 /**
  * 分割线以下：当前位置能做的事，每行一个选项：图标 + 名字 + 括号。
- * 主地图列出四个方向的邻居，子地图列出返回与子建筑，最后是节点动作。
+ * 子地图列出返回与子建筑，然后是同层邻居（手工维护的 neighbors），最后是节点动作。
  * @param {object} node
  */
 function printActions(node) {
@@ -90,19 +86,17 @@ function printActions(node) {
             screen.assign({kind: 'move', id: child.id})
         ));
     }
-    if (map_data.isMapNode(node)) {
-        for (const offset of NEIGHBOR_OFFSETS) {
-            const target = map_data.getLayerNode(node.parent, node.x + offset.dx, node.y + offset.dy);
-            if (target === null || !isVisible(target, node)) {
-                continue;
-            }
-            rows.push(ui.optionRow(
-                target.rl,
-                listName(target),
-                screen.assign({kind: 'move', id: target.id}),
-                meta.segments(MOVE_MINUTES, rate, [])
-            ));
+    for (const neighborId of node.neighbors || []) {
+        const target = map_data.getMapNodeById(neighborId);
+        if (target === null || !isVisible(target, node)) {
+            continue;
         }
+        rows.push(ui.optionRow(
+            target.rl,
+            listName(target),
+            screen.assign({kind: 'move', id: target.id}),
+            meta.segments(MOVE_MINUTES, rate, [])
+        ));
     }
     for (const action of action_registry.actionsFor(node)) {
         const info = typeof action.info === 'function' ? action.info({}) : (action.info || []);

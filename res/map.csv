@@ -1,0 +1,11 @@
+map_base,base.png,0,0,960,540,0,0
+map_default_teresa,default.png,0,0,48,48,360,240
+map_default_socrates,default.png,0,0,48,48,480,240
+map_default_jacobin,default.png,0,0,48,48,240,240
+map_nightingale,nightingale.png,0,0,48,48,360,348
+map_default_nightingale,default.png,0,0,48,48,360,348
+map_default_haymarket,default.png,0,0,48,48,360,132
+map_default_sarajevo,default.png,0,0,48,48,480,348
+map_default_cheongjin,default.png,0,0,48,48,120,240
+map_default_earp,default.png,0,0,48,48,240,132
+map_default_istanbul,default.png,0,0,48,48,600,240

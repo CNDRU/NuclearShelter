@@ -88,7 +88,6 @@ async function render() {
 }
 
 function init() {
-    map_data.initMapHash();
     map_data.validateMapData().forEach((issue) => console.warn(`[map] ${issue}`));
     era.set("Flags:is_at_title", true);
 }
