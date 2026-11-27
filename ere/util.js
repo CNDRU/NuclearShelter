@@ -1,3 +1,5 @@
+const {t} = require('#/i18n');
+
 function deserializePos(pos) {
     const raw = pos.split(',').map(Number);
     return [raw[0], raw[1]];
@@ -14,6 +16,36 @@ function serializePos(pos) {
 function formatCost(minutes) {
     const value = Math.max(0, Math.round(minutes));
     return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;
+}
+
+/**
+ * 这段时间里累积的辐射量（内部单位：1/60 μSv）。
+ * @param {number} minutes
+ * @param {number} rate 当地辐射（μSv/h）
+ */
+function radiationGain(minutes, rate) {
+    return Math.round(Number(rate) || 0) * Math.round(Number(minutes) || 0);
+}
+
+/**
+ * 按钮上的「时间 + 辐射」：15 分钟、1 μSv/h → "0:15|辐射15"。
+ * @param {number} minutes
+ * @param {number} rate
+ */
+function formatMeta(minutes, rate) {
+    return `${formatCost(minutes)}|${t('meta.radiation', {n: radiationGain(minutes, rate)})}`;
+}
+
+/**
+ * 变化量 → 重复符号：+2 → "++"；-3 → "---"；0 → ""。
+ * @param {number} delta
+ */
+function formatSigns(delta) {
+    const value = Math.round(Number(delta) || 0);
+    if (value === 0) {
+        return '';
+    }
+    return (value > 0 ? '+' : '-').repeat(Math.abs(value));
 }
 
 /**
@@ -39,6 +71,9 @@ module.exports = {
     serializePos,
     deserializePos,
     formatCost,
+    radiationGain,
+    formatMeta,
+    formatSigns,
     formatRadiation,
     formatLocalTime,
 };

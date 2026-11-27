@@ -5,13 +5,14 @@ const schedule = require('#/data/schedule');
 const attendance = require('#/attendance');
 const school = require('#/school');
 const screen = require('#/screen');
+const ui = require('#/ui');
 
 /** 迟到 / 没去的文字颜色。 */
 const LATE_COLOR = '#e6a23c';
 const MISSED_COLOR = '#f56c6c';
 
 /** 提醒文字的颜色。 */
-const REMINDER_COLOR = '#79bbff';
+const REMINDER_COLOR = '#ffffff';
 
 /**
  * 打印当天的安排（带考勤状态）。
@@ -74,7 +75,7 @@ function renderDayPlan() {
     const open = Boolean(era.get("Flags:schedule_open"));
     const now = time.now();
     era.printMultiColumns([{
-        config: {width: 24, align: 'left'},
+        config: ui.buttonConfig('primary', {width: 24, align: 'left'}),
         content: t('plan.title', {
             mark: open ? '▼' : '▶',
             weekday: now.weekdayName

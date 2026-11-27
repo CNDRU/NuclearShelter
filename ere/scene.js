@@ -3,6 +3,7 @@ const {t} = require('#/i18n');
 const effects = require('#/effects');
 const condition = require('#/condition');
 const screen = require('#/screen');
+const ui = require('#/ui');
 
 /** 把上下文里的节点名翻译成当前语言。 */
 function describe(context) {
@@ -77,7 +78,7 @@ async function choose(choices, params, context) {
     }
     screen.reset();
     const buttons = visible.map((choice) => ({
-        config: {width: 8, disableContinue: true, showAcc: false},
+        config: ui.buttonConfig('primary', {width: 8, disableContinue: true, showAcc: false}),
         content: choice.labelKey !== undefined ? t(choice.labelKey, params) : choice.label,
         type: 'button',
         accelerator: screen.assign({kind: 'sceneChoice', choice})
@@ -90,11 +91,11 @@ async function choose(choices, params, context) {
 /** 打出「下一步」并等待点击。 */
 async function next() {
     screen.reset();
-    era.printButton(t('ui.next'), screen.assign({kind: 'sceneNext'}), {
+    era.printButton(t('ui.next'), screen.assign({kind: 'sceneNext'}), ui.buttonConfig('primary', {
         width: 8,
         disableContinue: true,
         showAcc: false
-    });
+    }));
     await era.input({hideInput: true});
     await clearLastLine();
 }
@@ -109,12 +110,12 @@ async function clearLastLine() {
  */
 async function continuePage() {
     screen.reset();
-    era.printButton(t('ui.continue'), screen.assign({kind: 'continue'}), {
+    era.printButton(t('ui.continue'), screen.assign({kind: 'continue'}), ui.buttonConfig('primary', {
         width: 24,
         align: 'center',
         disableContinue: true,
         showAcc: false
-    });
+    }));
     await era.input({hideInput: true});
     await clearLastLine();
 }

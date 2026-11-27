@@ -5,6 +5,7 @@ const util = require('#/util');
 const map_data = require('#/map-data');
 const day_plan = require('#/day-plan');
 const screen = require('#/screen');
+const ui = require('#/ui');
 
 /** 存档栏位上限，与 ere.config.json 的 system.saveFiles 保持一致。 */
 const SLOT_MAX = 128;
@@ -55,9 +56,9 @@ function nextFreeSlot() {
     return null;
 }
 
-function button(accelerator, content, align, width) {
+function button(accelerator, content, align, width, buttonType) {
     return {
-        config: {width: width || 24, align: align || 'left'},
+        config: ui.buttonConfig(buttonType || 'primary', {width: width || 24, align: align || 'left'}),
         content,
         type: 'button',
         accelerator
@@ -120,11 +121,11 @@ async function askName(defaultName) {
         button(screen.assign({kind: 'nameDefault'}), t('save.use_default'), 'center', 12),
         button(screen.assign({kind: 'nameCustom'}), t('save.custom_name'), 'center', 12)
     ]);
-    era.printButton(t('ui.cancel'), screen.assign({kind: 'back'}), {
+    era.printButton(t('ui.cancel'), screen.assign({kind: 'back'}), ui.buttonConfig('primary', {
         width: 24,
         align: 'center',
         showAcc: false
-    });
+    }));
     const target = screen.resolve(await era.input({hideInput: true}));
     if (target === null || target.kind === 'back') {
         return null;
@@ -280,11 +281,11 @@ async function openInfo() {
     era.print(t('info.place', {place: placeName()}));
     era.print(t('info.plan', {weekday: now.weekdayName}));
     day_plan.renderPlanItems(now);
-    era.printButton(t('ui.back'), screen.assign({kind: 'back'}), {
+    era.printButton(t('ui.back'), screen.assign({kind: 'back'}), ui.buttonConfig('primary', {
         width: 24,
         align: 'center',
         showAcc: false
-    });
+    }));
     await era.input({hideInput: true});
 }
 

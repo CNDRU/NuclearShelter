@@ -1,6 +1,7 @@
 const era = require('#/era-electron');
 const {t} = require('#/i18n');
 const screen = require('#/screen');
+const ui = require('#/ui');
 
 /** 可选的开始季节，按日历顺序。 */
 const SEASONS = [
@@ -27,13 +28,13 @@ async function createCharacter() {
         era.drawLine({content: t('create.title')});
         era.print(t('create.prompt'));
         const buttons = SEASONS.map((season) => ({
-            config: {width: 6, align: 'center'},
+            config: ui.buttonConfig('primary', {width: 6, align: 'center'}),
             content: `${selected === season.id ? '[✓]' : '[ ]'} ${t(`time.season.${season.id}`)}`,
             type: 'button',
             accelerator: screen.assign({kind: 'season', id: season.id})
         }));
         buttons.push({
-            config: {width: 24, align: 'center'},
+            config: ui.buttonConfig('primary', {width: 24, align: 'center'}),
             content: t('create.confirm'),
             type: 'button',
             accelerator: screen.assign({kind: 'createConfirm'})

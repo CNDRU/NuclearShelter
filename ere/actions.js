@@ -2,12 +2,15 @@ const condition = require('#/condition');
 const sleep = require('#/page-sleep');
 
 /**
- * 节点动作表：MapNodes.json 里的 "actions": ["sleep"] 按这里的 id 解析。
+ * 节点动作表：MapNodes.json 里的 "actions": ["lockpick"] 按这里的 id 解析。
  * 每个动作有：
  *   textKey  按钮文本
- *   cost()   可选，返回按钮上显示的耗时（如 "0:30"）
+ *   minutes  可选，耗时（分钟）；括号里会自动带上耗时和这段时间的辐射增量
+ *   info()   可选，返回括号里的其他片段：[{text, tone}]，按 tone 上色
  *   when()   可选，返回按钮是否可见（参数是 {node, now}）
  *   run()    执行动作
+ *
+ * tone 可选值：positive / negative / illegal / chance-high / chance-medium / chance-low / neutral。
  *
  * 按钮的加速键由 screen 在本屏临时分配，动作 id 本身不参与输入，
  * 所以敲任何固定数字都不能触发动作。

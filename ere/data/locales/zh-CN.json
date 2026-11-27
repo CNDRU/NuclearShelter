@@ -81,6 +81,16 @@
     "map.back": "← {name}",
     "map.radiation": "当地辐射：{value} μSv/h",
 
+    "info.radiation_up": "辐射+",
+    "info.radiation_down": "辐射-",
+    "info.illegal": "违法:{crime}",
+    "info.check": "{skill}:{chance}",
+    "chance.high": "很可能成功",
+    "chance.medium": "可能成功",
+    "chance.low": "不太可能",
+    "crime.petty_theft": "小偷小摸",
+    "meta.radiation": "辐射{n}",
+
     "travel.heading": "前往{to}",
     "travel.enter_heading": "进入{to}",
     "travel.return_heading": "返回{to}",

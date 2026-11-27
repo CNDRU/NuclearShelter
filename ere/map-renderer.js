@@ -5,9 +5,19 @@ const map_data = require('#/map-data');
 const action_registry = require('#/actions');
 const condition = require('#/condition');
 const screen = require('#/screen');
+const ui = require('#/ui');
+const meta = require('#/meta');
 const {MOVE_MINUTES} = require('#/movement');
 
 const CELL_WIDTH = 8;
+
+/** 同层可走的四个方向：上、右、下、左。 */
+const NEIGHBOR_OFFSETS = [
+    {dx: 0, dy: -1},
+    {dx: 1, dy: 0},
+    {dx: 0, dy: 1},
+    {dx: -1, dy: 0}
+];
 
 function renderMapUI() {
     if (era.get("Flags:is_at_title")) {
@@ -18,11 +28,7 @@ function renderMapUI() {
         era.print(t('map.node_missing'));
         return;
     }
-    if (map_data.isMapNode(node)) {
-        printNeighborhood(node);
-    } else {
-        era.print(displayName(node), {align: 'center'});
-    }
+    era.print(displayName(node), {align: 'left'});
     era.print(t(node.desc));
     era.print(t('map.radiation', {
         value: util.formatRadiation(map_data.radiationOf(node))
@@ -41,6 +47,14 @@ function isVisible(node, current) {
 }
 
 /**
+ * 列表里的节点名：只显示译文一行，保证名字和括号挨得紧。
+ * @param {object} node
+ */
+function listName(node) {
+    return t(node.name);
+}
+
+/**
  * 节点显示名：有译文就"译文 + 原文"两行，没译文只显示原文。
  * @param {object} node
  */
@@ -50,39 +64,24 @@ function displayName(node) {
 }
 
 /**
- * 打印当前节点所在那一层的 3×3 十字：中心是自己（不可点击），上下左右是同层邻居。
- * @param {object} node
- */
-function printNeighborhood(node) {
-    const cells = new Array(9);
-    let k = 0;
-    for (let j = node.y - 1; j <= node.y + 1; j++) {
-        for (let i = node.x - 1; i <= node.x + 1; i++) {
-            if (i !== node.x && j !== node.y) {
-                cells[k] = blankCell();
-            } else if (i === node.x && j === node.y) {
-                cells[k] = currentCell(node);
-            } else {
-                const target = map_data.getLayerNode(node.parent, i, j);
-                cells[k] = target === null || !isVisible(target, node) ? blankCell() : nodeCell(target);
-            }
-            k++;
-        }
-    }
-    era.printMultiColumns(cells, {verticalAlign: 'middle'});
-}
-
-/**
- * 分割线以下：当前位置能做的事（返回上级 + 进入下一层子地图 + 节点动作）。
- * 以后要加别的动作，写进 MapNodes 的 actions 即可。
+ * 分割线以下：当前位置能做的事。
+ * 主地图列出四个方向的邻居（带耗时与辐射），子地图列出返回与子建筑，最后是节点动作。
  * @param {object} node
  */
 function printActions(node) {
-    const buttons = [];
+    const plain = [];
+    const rows = [];
+    const flushPlain = () => {
+        if (plain.length > 0) {
+            rows.push(plain.slice());
+            plain.length = 0;
+        }
+    };
+
     if (!map_data.isMapNode(node)) {
         const parent = map_data.getMapNodeById(node.parent);
         if (parent !== null) {
-            buttons.push(actionCell(
+            plain.push(actionCell(
                 t('map.back', {name: t(parent.name)}),
                 screen.assign({kind: 'move', id: parent.id})
             ));
@@ -92,63 +91,89 @@ function printActions(node) {
         if (!isVisible(child, node)) {
             continue;
         }
-        buttons.push(actionCell(
-            displayName(child),
+        plain.push(actionCell(
+            listName(child),
             screen.assign({kind: 'move', id: child.id})
         ));
     }
-    for (const action of action_registry.actionsFor(node)) {
-        buttons.push(actionCell(
-            t(action.textKey),
-            screen.assign({kind: 'action', id: action.id}),
-            action.cost ? action.cost() : null
-        ));
+
+    const rate = map_data.radiationOf(node);
+    if (map_data.isMapNode(node)) {
+        for (const offset of NEIGHBOR_OFFSETS) {
+            const target = map_data.getLayerNode(node.parent, node.x + offset.dx, node.y + offset.dy);
+            if (target === null || !isVisible(target, node)) {
+                continue;
+            }
+            const link = moveLink(target);
+            rows.push([link, meta.spanCell(meta.segments(MOVE_MINUTES, rate, []), 24 - link.config.width)]);
+        }
     }
-    if (buttons.length === 0) {
+
+    for (const action of action_registry.actionsFor(node)) {
+        const info = typeof action.info === 'function' ? action.info({}) : (action.info || []);
+        const parts = meta.segments(action.minutes, rate, info);
+        if (parts.length === 0) {
+            plain.push(actionCell(
+                t(action.textKey),
+                screen.assign({kind: 'action', id: action.id})
+            ));
+        } else {
+            flushPlain();
+            const link = actionNameCell(action);
+            rows.push([link, meta.spanCell(parts, 24 - link.config.width)]);
+        }
+    }
+    flushPlain();
+
+    if (rows.length === 0) {
         era.print(t('map.no_actions'));
         return;
     }
-    era.printInColRows(buttons);
+    for (const row of rows) {
+        era.printInColRows(row);
+    }
 }
 
-/** 邻居：可点击的按钮，名字后面带同层移动的耗时。加速键用本屏临时编号。 */
-function nodeCell(node) {
-    const lines = displayName(node).split('\n');
-    lines[0] = `${lines[0]} (${util.formatCost(MOVE_MINUTES)})`;
+/**
+ * 邻居链接：名字 + 移动目标。
+ * @param {object} target
+ */
+function moveLink(target) {
+    const content = listName(target);
     return {
-        config: {width: CELL_WIDTH, align: 'center'},
-        content: lines.join('\n'),
+        config: ui.buttonConfig('primary', {width: meta.linkWidth(content), align: 'left'}),
+        content,
         type: 'button',
-        accelerator: screen.assign({kind: 'move', id: node.id})
-    };
-}
-
-/** 当前位置：纯文本，不可点击。 */
-function currentCell(node) {
-    return {
-        config: {width: CELL_WIDTH, align: 'center'},
-        content: displayName(node),
-        type: 'text'
+        accelerator: screen.assign({kind: 'move', id: target.id})
     };
 }
 
 /**
- * 动作按钮。costText 不为空时在文字后面加 (耗时)。
- * @param {string} content
- * @param {number} accelerator
- * @param {string|null} [costText]
+ * 动作名按钮。
+ * @param {object} action
  */
-function actionCell(content, accelerator, costText) {
+function actionNameCell(action) {
+    const content = t(action.textKey);
     return {
-        config: {width: CELL_WIDTH, align: 'center'},
-        content: costText ? `${content} (${costText})` : content,
+        config: ui.buttonConfig(action.buttonType || 'primary', {width: meta.linkWidth(content), align: 'left'}),
+        content,
         type: 'button',
-        accelerator: accelerator
+        accelerator: screen.assign({kind: 'action', id: action.id})
     };
 }
 
-function blankCell() {
-    return {config: {width: CELL_WIDTH}, content: ' ', type: 'text'};
+/**
+ * 普通动作按钮（没有耗时/辐射时用）。
+ * @param {string} content
+ * @param {number} accelerator
+ */
+function actionCell(content, accelerator) {
+    return {
+        config: ui.buttonConfig('primary', {width: CELL_WIDTH, align: 'center'}),
+        content,
+        type: 'button',
+        accelerator
+    };
 }
 
 module.exports = {renderMapUI};

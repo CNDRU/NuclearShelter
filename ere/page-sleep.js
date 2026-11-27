@@ -5,6 +5,9 @@ const util = require('#/util');
 const action = require('#/action');
 const scene = require('#/scene');
 const screen = require('#/screen');
+const map_data = require('#/map-data');
+const meta = require('#/meta');
+const ui = require('#/ui');
 const {HOURS} = require('#/data/sleep');
 
 /**
@@ -16,17 +19,24 @@ async function openSleep() {
     screen.reset();
     era.drawLine({content: t('sleep.title')});
     era.print(t('sleep.prompt'));
-    era.printMultiColumns(HOURS.map((hours) => ({
-        config: {width: 8, align: 'center'},
-        content: `${t('sleep.hours', {n: hours})} (${util.formatCost(hours * 60)})`,
-        type: 'button',
-        accelerator: screen.assign({kind: 'sleepHours', hours})
-    })));
-    era.printButton(t('ui.cancel'), screen.assign({kind: 'back'}), {
+    const node = map_data.getMapNodeById(era.get("Flags:cur_map_node"));
+    const rate = node === null ? map_data.DEFAULT_RADIATION : map_data.radiationOf(node);
+    for (const hours of HOURS) {
+        const label = t('sleep.hours', {n: hours});
+        const width = meta.linkWidth(label);
+        const link = {
+            config: ui.buttonConfig('primary', {width, align: 'left'}),
+            content: label,
+            type: 'button',
+            accelerator: screen.assign({kind: 'sleepHours', hours})
+        };
+        era.printInColRows([link, meta.spanCell(meta.segments(hours * 60, rate, []), 24 - width)]);
+    }
+    era.printButton(t('ui.cancel'), screen.assign({kind: 'back'}), ui.buttonConfig('primary', {
         width: 24,
         align: 'center',
         showAcc: false
-    });
+    }));
 
     const target = screen.resolve(await era.input({hideInput: true}));
     if (target === null || target.kind !== 'sleepHours') {

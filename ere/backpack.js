@@ -2,6 +2,7 @@ const era = require('#/era-electron');
 const {t} = require('#/i18n');
 const screen = require('#/screen');
 const items = require('#/data/items');
+const ui = require('#/ui');
 
 /**
  * 背包：Flags:inventory 存 {物品id: 数量}，Flags:backpack_open 存折叠状态。
@@ -72,7 +73,7 @@ function renderBackpack() {
     }
     const open = Boolean(era.get("Flags:backpack_open"));
     era.printMultiColumns([{
-        config: {width: 24, align: 'left'},
+        config: ui.buttonConfig('primary', {width: 24, align: 'left'}),
         content: t('backpack.title', {
             mark: open ? '▼' : '▶',
             count: totalCount()
